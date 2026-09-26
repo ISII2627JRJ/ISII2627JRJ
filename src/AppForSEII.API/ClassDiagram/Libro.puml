@@ -1,0 +1,5 @@
+@startuml
+class Libro {
+    + Id : string <<get>> <<set>>
+}
+@enduml
