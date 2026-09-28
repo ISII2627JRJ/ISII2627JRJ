@@ -1,0 +1,5 @@
+@startuml
+class Compra {
+    + Id : string <<get>> <<set>>
+}
+@enduml
