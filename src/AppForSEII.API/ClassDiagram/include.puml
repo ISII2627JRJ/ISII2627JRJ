@@ -5,5 +5,10 @@ class ApplicationUser {
     + Name : string? <<get>> <<set>>
     + Surname : string? <<get>> <<set>>
 }
+class ReponeItem {
+    + Id : int
+    + Cantidad : int
+    + FechaReposicion : DateTime
+}
 IdentityUser <|-- ApplicationUser
 @enduml

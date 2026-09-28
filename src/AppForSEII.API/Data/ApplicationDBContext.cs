@@ -16,6 +16,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     }
 
 
+    public DbSet<ReponeItem> ReponeItems { get; set; }
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
 
