@@ -20,6 +20,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ResenaItem> ResenaItems { get; set; }
 
+    public DbSet<Genero> Generos { get; set; }
+
 
 
 
