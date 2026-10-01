@@ -6,5 +6,6 @@
 !include .\\Libro.puml
 !include .\\MetodoPago.puml
 !include .\\ReponeItem.puml
+!include .\\Resena.puml
 !include .\\ResenaItem.puml
 @enduml
