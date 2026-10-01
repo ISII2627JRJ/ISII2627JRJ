@@ -22,6 +22,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Resena> Resenas { get; set; }
     public DbSet<Genero> Generos { get; set; }
+    public DbSet<Editorial> Editoriales { get; set; }
 
 
 

@@ -2,10 +2,12 @@
 !include .\\ApplicationUser.puml
 !include .\\Compra.puml
 !include .\\CompraItem.puml
+!include .\\Editorial.puml
 !include .\\Genero.puml
 !include .\\Libro.puml
 !include .\\MetodoPago.puml
 !include .\\ReponeItem.puml
 !include .\\Resena.puml
 !include .\\ResenaItem.puml
+!include .\\Editorial.puml
 @enduml
