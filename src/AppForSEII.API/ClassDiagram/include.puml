@@ -4,6 +4,7 @@
 !include .\\CompraItem.puml
 !include .\\Genero.puml
 !include .\\Libro.puml
+!include .\\MetodoPago.puml
 !include .\\ReponeItem.puml
 !include .\\ResenaItem.puml
 @enduml
