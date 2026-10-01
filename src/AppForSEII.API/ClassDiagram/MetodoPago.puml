@@ -1,4 +1,9 @@
+@startuml
 class MetodoPago {
     + Id : int
 }
 MetodoPago <|-- Visa
+    + Id : int <<get>> <<set>>
+    + Nombre : string <<get>> <<set>>
+}
+@enduml
