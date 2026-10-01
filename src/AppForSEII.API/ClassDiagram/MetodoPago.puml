@@ -1,4 +1,4 @@
 class MetodoPago {
     + Id : int
-    + Nombre : string
 }
+MetodoPago <|-- Visa
