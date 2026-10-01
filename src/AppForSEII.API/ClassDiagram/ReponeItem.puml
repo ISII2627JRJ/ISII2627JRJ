@@ -1,5 +1,7 @@
+@startuml
 class ReponeItem {
-    + Id : int
-    + Cantidad : int
-    + FechaReposicion : DateTime
+    + Id : int <<get>> <<set>>
+    + Cantidad : int <<get>> <<set>>
 }
+ReponeItem --> "FechaReposicion" DateTime
+@enduml
