@@ -2,6 +2,7 @@
 !include .\\ApplicationUser.puml
 !include .\\Compra.puml
 !include .\\CompraItem.puml
+!include .\\Genero.puml
 !include .\\Libro.puml
 !include .\\ReponeItem.puml
 !include .\\Resena.puml
