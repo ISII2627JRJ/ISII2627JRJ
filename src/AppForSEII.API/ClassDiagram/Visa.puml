@@ -1,0 +1,4 @@
+class Visa {
+    + NumeroTarjeta : string
+    + FechaCaducidad : DateTime
+}

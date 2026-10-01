@@ -9,5 +9,6 @@
 !include .\\ReponeItem.puml
 !include .\\Resena.puml
 !include .\\ResenaItem.puml
+!include .\\Visa.puml
 !include .\\Editorial.puml
 @enduml
