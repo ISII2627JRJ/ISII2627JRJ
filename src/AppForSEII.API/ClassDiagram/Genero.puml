@@ -1,5 +1,7 @@
 @startuml
 class Genero {
+    + Genero()
+    + Genero(id:int, nombre:string)
     + Id : int <<get>> <<set>>
     + Nombre : string <<get>> <<set>>
 }
