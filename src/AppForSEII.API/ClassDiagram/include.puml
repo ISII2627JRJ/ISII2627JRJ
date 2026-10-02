@@ -12,4 +12,5 @@
 !include .\\Resena.puml
 !include .\\ResenaItem.puml
 !include .\\Visa.puml
+!include .\Reposicion.puml
 @enduml
