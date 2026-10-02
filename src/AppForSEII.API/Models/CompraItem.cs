@@ -10,7 +10,7 @@ namespace AppForSEII.API.Models
         {
         }
 
-        public CompraItem(int cantidad, string libroId, Libro libro, string compraId, Compra compra)
+        public CompraItem(int cantidad, int libroId, Libro libro, int compraId, Compra compra)
         {
             Cantidad = cantidad;
             LibroId = libroId;
