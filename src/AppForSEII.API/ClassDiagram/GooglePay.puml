@@ -1,0 +1,4 @@
+class GooglePay {
+    + Email : string
+}
+MetodoPago <|-- GooglePay
