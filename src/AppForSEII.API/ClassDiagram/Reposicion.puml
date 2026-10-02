@@ -1,12 +1,10 @@
+@startuml
 class Reposicion {
-    + Id : int
-    + FechaReposicion : DateTime
-    + PrecioTotal : double
-    + Comentario : string
     + Reposicion()
-    + <<override>> Equals(obj:object?) : bool
-    + <<override>> GetHashCode() : int
+    + Reposicion(id:int, fechaReposicion:DateTime, precioTotal:double, comentario:string)
+    + Id : int <<get>> <<set>>
+    + FechaReposicion : DateTime <<get>> <<set>>
+    + PrecioTotal : double <<get>> <<set>>
+    + Comentario : string <<get>> <<set>>
 }
-Reposicion "1" -- "*" ReposicionItem : ReposicionItems
-Reposicion "*" -- "1" ApplicationUser : Usuario
-Reposicion "*" -- "1" MetodoPago : MetodoPago
+@enduml

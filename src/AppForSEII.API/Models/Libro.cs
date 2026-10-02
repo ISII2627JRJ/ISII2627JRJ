@@ -7,6 +7,26 @@ namespace AppForSEII.API.Models
 {
     public class Libro
     {
+        public Libro()
+        {
+        }
+
+        public Libro(int id, string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock, string tipoLibro, double calificacionMedia, Genero genero, Editorial editorial)
+        {
+            Id = id;
+            Titulo = titulo;
+            Autor = autor;
+            FechaLanzamiento = fechaLanzamiento;
+            PrecioCompra = precioCompra;
+            PrecioReposicion = precioReposicion;
+            Stock = stock;
+            TipoLibro = tipoLibro;
+            CalificacionMedia = calificacionMedia;
+            Genero = genero;
+            Editorial = editorial;
+          
+        }
+
         [Key]
         public int Id { get; set; }
 
@@ -40,5 +60,6 @@ namespace AppForSEII.API.Models
         public IList<CompraItem> CompraItems { get; set; }
         public IList<ReponeItem> ReponeItems { get; set; } 
         public IList<ResenaItem> ResenaItems { get; set; }
+        
     }
 }

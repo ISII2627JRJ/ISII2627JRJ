@@ -5,6 +5,19 @@ namespace AppForSEII.API.Models
 {
     public class CompraItem
     {
+        public CompraItem()
+        {
+        }
+
+        public CompraItem(int cantidad, string libroId, Libro libro, string compraId, Compra compra)
+        {
+            Cantidad = cantidad;
+            LibroId = libroId;
+            Libro = libro;
+            CompraId = compraId;
+            Compra = compra;
+        }
+
         [Required(ErrorMessage = "La cantidad es obligatoria")]
         [Range(2, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que 1")] 
         public int Cantidad { get; set; }

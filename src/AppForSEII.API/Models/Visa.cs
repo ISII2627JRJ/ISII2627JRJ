@@ -6,5 +6,14 @@ namespace AppForSEII.API.Models
     {
         public string NumeroTarjeta { get; set; }
         public DateTime FechaCaducidad { get; set; }
+
+        public Visa(DateTime fechaCaducidad)
+        {
+            FechaCaducidad = fechaCaducidad;
+        }
+
+        public Visa()
+        {
+        }
     }
 }

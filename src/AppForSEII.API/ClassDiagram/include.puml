@@ -9,8 +9,8 @@
 !include .\\MetodoPago.puml
 !include .\\Paypal.puml
 !include .\\ReponeItem.puml
+!include .\\Reposicion.puml
 !include .\\Resena.puml
 !include .\\ResenaItem.puml
 !include .\\Visa.puml
-!include .\Reposicion.puml
 @enduml
