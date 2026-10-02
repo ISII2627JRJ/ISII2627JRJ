@@ -1,15 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
+using Microsoft.EntityFrameworkCore;
 namespace AppForSEII.API.Models
 {
-    public class CompraItem
+    [PrimaryKey(nameof(LibroId), nameof(CompraId))]
+      public class CompraItem
     {
         public CompraItem()
         {
         }
 
-        public CompraItem(int cantidad, string libroId, Libro libro, string compraId, Compra compra)
+        public CompraItem(int cantidad, int libroId, Libro libro, int compraId, Compra compra)
         {
             Cantidad = cantidad;
             LibroId = libroId;
@@ -23,12 +24,12 @@ namespace AppForSEII.API.Models
         public int Cantidad { get; set; }
 
         [Required]
-        public string LibroId { get; set; }
+        public int LibroId { get; set; }
         [ForeignKey("LibroId")]
         public virtual Libro Libro { get; set; }
 
         [Required]
-        public string CompraId { get; set; }
+        public int CompraId { get; set; }
         [ForeignKey("CompraId")]
         public virtual Compra Compra { get; set; }
     }
