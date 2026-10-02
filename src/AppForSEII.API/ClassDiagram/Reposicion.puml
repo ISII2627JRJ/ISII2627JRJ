@@ -1,0 +1,12 @@
+class Reposicion {
+    + Id : int
+    + FechaReposicion : DateTime
+    + PrecioTotal : double
+    + Comentario : string
+    + Reposicion()
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
+}
+Reposicion "1" -- "*" ReposicionItem : ReposicionItems
+Reposicion "*" -- "1" ApplicationUser : Usuario
+Reposicion "*" -- "1" MetodoPago : MetodoPago
