@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Identity;
+
+
 namespace AppForSEII.API.Data {
     public class SeedData {
         public static void Initialize(ApplicationDbContext dbContext, IServiceProvider serviceProvider, ILogger logger) {
@@ -19,14 +22,16 @@ namespace AppForSEII.API.Data {
                 logger.LogError(ex, "An error occurred seeding the Users in the Database.");
             }
 
- 
-
+            try {
+                SeedLibros(dbContext);
+            }
+            catch (Exception ex) {
+                logger.LogError(ex, "An error occurred seeding the Libros in the Database.");
+            }
         }
 
         public static void SeedRoles(RoleManager<IdentityRole> roleManager, List<string> roles) {
-
             foreach (string roleName in roles) {
-                //it checks such role does not exist in the database 
                 if (!roleManager.RoleExistsAsync(roleName).Result) {
                     IdentityRole role = new IdentityRole();
                     role.Name = roleName;
@@ -34,11 +39,9 @@ namespace AppForSEII.API.Data {
                     IdentityResult roleResult = roleManager.CreateAsync(role).Result;
                 }
             }
-
         }
 
         public static void SeedUsers(UserManager<ApplicationUser> userManager, List<string> roles) {
-            //first, it checks the user does not already exist in the DB
             if (userManager.FindByNameAsync("elena@uclm.es").Result == null) {
                 ApplicationUser user = new ApplicationUser("1", "Elena", "Navarro Martínez", "elena@uclm.es");
                 user.EmailConfirmed = true;
@@ -47,33 +50,53 @@ namespace AppForSEII.API.Data {
                 result.Wait();
 
                 if (result.IsCompletedSuccessfully) {
-                    //administrator role
                     userManager.AddToRoleAsync(user, roles[0]).Wait();
                 }
             }
 
-
             if (userManager.FindByNameAsync("peter@uclm.es").Result == null) {
-                //A customer class has been defined because it has different attributes (purchase, rental, etc.)
                 ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es");
                 user.EmailConfirmed = true;
 
                 var result = userManager.CreateAsync(user, "OtherPass12$");
-
                 result.Wait();
 
                 if (result.IsCompletedSuccessfully) {
-                    //customer role
                     userManager.AddToRoleAsync(user, roles[2]).Wait();
-
                 }
             }
-
         }
 
+        public static void SeedLibros(ApplicationDbContext dbContext) {
+          
+            if (!dbContext.Libros.Any()) { 
+                
+               
+                Genero genero1 = new Genero { Nombre = "Fantasía" };
+                Editorial editorial1 = new Editorial { Nombre = "Minotauro" };
 
+               
+                Libro libro1 = new Libro {
+                    Titulo = "El Señor de los Anillos",
+                    Autor = "J.R.R. Tolkien",
+                    FechaLanzamiento = new DateTime(1954, 7, 29),
+                    PrecioCompra = 20.50m, 
+                    Stock = 10,
+                    PrecioReposicion = 15.00m, 
+                    TipoLibro = "Tapa dura", 
+                    CalificacionMedia = 4.9,
+                    Genero = genero1,
+                    Editorial = editorial1
+                };
 
+                
+                dbContext.Add(genero1);
+                dbContext.Add(editorial1);
+                dbContext.Add(libro1);
 
-
+               
+                dbContext.SaveChanges();
+            }
+        }
     }
 }
