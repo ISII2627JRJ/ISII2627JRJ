@@ -4,11 +4,12 @@
 !include .\\CompraItem.puml
 !include .\\Editorial.puml
 !include .\\Genero.puml
+!include .\\GooglePay.puml
 !include .\\Libro.puml
 !include .\\MetodoPago.puml
+!include .\\Paypal.puml
 !include .\\ReponeItem.puml
 !include .\\Resena.puml
 !include .\\ResenaItem.puml
 !include .\\Visa.puml
-!include .\\GooglePay.puml
 @enduml

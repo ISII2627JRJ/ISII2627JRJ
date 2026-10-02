@@ -1,4 +1,6 @@
+@startuml
 class GooglePay {
-    + Email : string
+    + Email : string <<get>> <<set>>
 }
 MetodoPago <|-- GooglePay
+@enduml

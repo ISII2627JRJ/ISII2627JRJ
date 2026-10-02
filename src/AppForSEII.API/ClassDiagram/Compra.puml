@@ -1,15 +1,13 @@
 @startuml
 class Compra {
     + Id : int <<get>> <<set>>
+    + FechaCompra : DateTime <<get>> <<set>>
     + PrecioTotal : decimal <<get>> <<set>>
     + CodigoDescuento : string? <<get>> <<set>>
     + ApplicationUserId : string <<get>> <<set>>
+    + Cliente : ApplicationUser <<get>> <<set>>
     + MetodoPagoId : int <<get>> <<set>>
+    + MetodoPago : MetodoPago <<get>> <<set>>
+    + CompraItems : IList<CompraItem> <<get>> <<set>>
 }
-class "IList`1"<T> {
-}
-Compra --> "FechaCompra" DateTime
-Compra --> "Cliente" ApplicationUser
-Compra --> "MetodoPago" MetodoPago
-Compra --> "CompraItems<CompraItem>" "IList`1"
 @enduml

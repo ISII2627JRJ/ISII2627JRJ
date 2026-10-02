@@ -2,8 +2,8 @@
 class CompraItem {
     + Cantidad : int <<get>> <<set>>
     + LibroId : string <<get>> <<set>>
+    + <<virtual>> Libro : Libro <<get>> <<set>>
     + CompraId : string <<get>> <<set>>
+    + <<virtual>> Compra : Compra <<get>> <<set>>
 }
-CompraItem --> "Libro" Libro
-CompraItem --> "Compra" Compra
 @enduml
