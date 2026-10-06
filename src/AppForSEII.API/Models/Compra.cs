@@ -8,6 +8,33 @@ namespace AppForSEII.API.Models
 {
     public class Compra
     {
+        public Compra()
+        {
+        }
+    
+
+        public Compra(int id, DateTime fechaCompra, decimal precioTotal, string? codigoDescuento, string applicationUserId, ApplicationUser usuario, int metodoPagoId, MetodoPago metodoPago, IList<CompraItem> compraItems)
+        {
+            Id = id;
+            FechaCompra = fechaCompra;
+            PrecioTotal = precioTotal;
+            CodigoDescuento = codigoDescuento;
+            ApplicationUserId = applicationUserId;
+            Usuario = usuario;
+            MetodoPagoId = metodoPagoId;
+            MetodoPago = metodoPago;
+            CompraItems = compraItems;
+        }
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         [Key]
         public int Id { get; set; }
         
@@ -24,7 +51,7 @@ namespace AppForSEII.API.Models
         public string ApplicationUserId { get; set; }
         
         [ForeignKey("ApplicationUserId")]
-        public ApplicationUser Cliente { get; set; }
+        public ApplicationUser Usuario { get; set; }
         
         public int MetodoPagoId { get; set; }
         
@@ -32,5 +59,8 @@ namespace AppForSEII.API.Models
         public MetodoPago MetodoPago { get; set; }
         
         public IList<CompraItem> CompraItems { get; set; }
+
+
+        
     }
 }

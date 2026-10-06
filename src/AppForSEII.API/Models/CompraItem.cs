@@ -18,6 +18,15 @@ namespace AppForSEII.API.Models
             CompraId = compraId;
             Compra = compra;
         }
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         [Required(ErrorMessage = "La cantidad es obligatoria")]
         [Range(2, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que 1")] 

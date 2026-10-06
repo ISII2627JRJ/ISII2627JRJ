@@ -5,16 +5,18 @@ class Libro {
     + Id : int <<get>> <<set>>
     + Titulo : string <<get>> <<set>>
     + Autor : string <<get>> <<set>>
-    + FechaLanzamiento : DateTime <<get>> <<set>>
     + PrecioCompra : decimal <<get>> <<set>>
     + PrecioReposicion : decimal <<get>> <<set>>
     + Stock : int <<get>> <<set>>
     + TipoLibro : string <<get>> <<set>>
     + CalificacionMedia : double <<get>> <<set>>
-    + Genero : Genero <<get>> <<set>>
-    + Editorial : Editorial <<get>> <<set>>
-    + CompraItems : IList<CompraItem> <<get>> <<set>>
-    + ReponeItems : IList<ReponeItem> <<get>> <<set>>
-    + ResenaItems : IList<ResenaItem> <<get>> <<set>>
 }
+class "IList`1"<T> {
+}
+Libro --> "FechaLanzamiento" DateTime
+Libro --> "Genero" Genero
+Libro --> "Editorial" Editorial
+Libro --> "CompraItems<CompraItem>" "IList`1"
+Libro --> "ReponeItems<ReponeItem>" "IList`1"
+Libro --> "ResenaItems<ResenaItem>" "IList`1"
 @enduml
