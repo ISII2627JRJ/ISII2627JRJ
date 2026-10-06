@@ -4,6 +4,6 @@ class ReponeItem {
     + ReponeItem(id:int, cantidad:int, fechaReposicion:DateTime)
     + Id : int <<get>> <<set>>
     + Cantidad : int <<get>> <<set>>
-    + FechaReposicion : DateTime <<get>> <<set>>
 }
+ReponeItem --> "FechaReposicion" DateTime
 @enduml

@@ -2,8 +2,10 @@
 class Editorial {
     + Id : int <<get>> <<set>>
     + Nombre : string <<get>> <<set>>
-    + <<virtual>> Libros : IList<Libro> <<get>> <<set>>
     + Editorial()
     + Editorial(id:int, nombre:string)
 }
+class "IList`1"<T> {
+}
+Editorial --> "Libros<Libro>" "IList`1"
 @enduml

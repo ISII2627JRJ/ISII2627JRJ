@@ -1,13 +1,19 @@
 @startuml
 class Compra {
+    + Compra()
+    + Compra(id:int, fechaCompra:DateTime, precioTotal:decimal, codigoDescuento:string?, applicationUserId:string, usuario:ApplicationUser, metodoPagoId:int, metodoPago:MetodoPago, compraItems:IList<CompraItem>)
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
     + Id : int <<get>> <<set>>
-    + FechaCompra : DateTime <<get>> <<set>>
     + PrecioTotal : decimal <<get>> <<set>>
     + CodigoDescuento : string? <<get>> <<set>>
     + ApplicationUserId : string <<get>> <<set>>
-    + Cliente : ApplicationUser <<get>> <<set>>
     + MetodoPagoId : int <<get>> <<set>>
-    + MetodoPago : MetodoPago <<get>> <<set>>
-    + CompraItems : IList<CompraItem> <<get>> <<set>>
 }
+class "IList`1"<T> {
+}
+Compra --> "FechaCompra" DateTime
+Compra --> "Usuario" ApplicationUser
+Compra --> "MetodoPago" MetodoPago
+Compra --> "CompraItems<CompraItem>" "IList`1"
 @enduml
