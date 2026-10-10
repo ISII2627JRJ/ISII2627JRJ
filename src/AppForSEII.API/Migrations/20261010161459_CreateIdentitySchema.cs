@@ -285,20 +285,20 @@ namespace AppForSEII.API.Migrations
                 name: "ReponeItem",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Cantidad = table.Column<int>(type: "int", nullable: false),
-                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LibroId = table.Column<int>(type: "int", nullable: true)
+                    LibroId = table.Column<int>(type: "int", nullable: false),
+                    ReposicionId = table.Column<int>(type: "int", nullable: false),
+                    CantidadRepuesta = table.Column<int>(type: "int", nullable: false),
+                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ReponeItem", x => x.Id);
+                    table.PrimaryKey("PK_ReponeItem", x => new { x.LibroId, x.ReposicionId });
                     table.ForeignKey(
                         name: "FK_ReponeItem_Libros_LibroId",
                         column: x => x.LibroId,
                         principalTable: "Libros",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -415,11 +415,6 @@ namespace AppForSEII.API.Migrations
                 name: "IX_Libros_GeneroId",
                 table: "Libros",
                 column: "GeneroId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ReponeItem_LibroId",
-                table: "ReponeItem",
-                column: "LibroId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResenaItems_ResenaId",
