@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppForSEII.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261002204015_CreateIdentitySchema")]
+    [Migration("20261010161459_CreateIdentitySchema")]
     partial class CreateIdentitySchema
     {
         /// <inheritdoc />
@@ -259,24 +259,19 @@ namespace AppForSEII.API.Migrations
 
             modelBuilder.Entity("AppForSEII.API.Models.ReponeItem", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("LibroId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("ReposicionId")
+                        .HasColumnType("int");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<int>("CantidadRepuesta")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("FechaReposicion")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LibroId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LibroId");
+                    b.HasKey("LibroId", "ReposicionId");
 
                     b.ToTable("ReponeItem");
                 });
@@ -471,7 +466,7 @@ namespace AppForSEII.API.Migrations
 
             modelBuilder.Entity("AppForSEII.API.Models.Compra", b =>
                 {
-                    b.HasOne("AppForSEII.API.Models.ApplicationUser", "Cliente")
+                    b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
                         .WithMany()
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -483,9 +478,9 @@ namespace AppForSEII.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Cliente");
-
                     b.Navigation("MetodoPago");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.CompraItem", b =>
@@ -530,7 +525,9 @@ namespace AppForSEII.API.Migrations
                 {
                     b.HasOne("AppForSEII.API.Models.Libro", null)
                         .WithMany("ReponeItems")
-                        .HasForeignKey("LibroId");
+                        .HasForeignKey("LibroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Resena", b =>
