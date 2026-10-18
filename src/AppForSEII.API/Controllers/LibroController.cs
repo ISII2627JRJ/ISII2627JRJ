@@ -46,7 +46,7 @@ namespace AppForSEII.API.Controllers
             return Ok(libros);
         }
 
-         [HttpGet]
+        [HttpGet]
         [Route("GetLibrosParaResenar")]
         [ProducesResponseType(typeof(IList<LibroParaResenarDTO>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult> GetLibrosParaResenar()
@@ -69,6 +69,25 @@ namespace AppForSEII.API.Controllers
             return Ok(libros);
         }
 
-        
+        [HttpGet]
+        [Route("GetLibrosParaReponer")]
+        [ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaReponer()
+        {
+            var libros = await _context.Libros
+                .Include(l => l.Genero)
+                .Include(l => l.Editorial)
+                .Select(l => new LibroParaReponerDTO(
+                    l.Id, 
+                    l.Titulo, 
+                    l.Genero.Nombre, 
+                    l.FechaLanzamiento, 
+                    l.PrecioReposicion, 
+                    l.Autor
+                ))
+                .ToListAsync();
+
+            return Ok(libros);
+        }
     }
 }
