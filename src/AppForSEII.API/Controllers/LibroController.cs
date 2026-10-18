@@ -46,6 +46,48 @@ namespace AppForSEII.API.Controllers
             return Ok(libros);
         }
 
-        
+        [HttpGet]
+        [Route("GetLibrosParaResenar")]
+        [ProducesResponseType(typeof(IList<LibroParaResenarDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaResenar()
+        {
+            var libros = await _context.Libros
+                .Include(l => l.Genero)
+                .Include(l => l.Editorial)
+                .Select(l => new LibroParaResenarDTO(
+                    l.Id, 
+                    l.Titulo, 
+                    l.TipoLibro, 
+                    l.Genero.Nombre, 
+                    l.Editorial.Nombre, 
+                    l.Autor, 
+                    l.CalificacionMedia, 
+                    l.FechaLanzamiento
+                ))
+                .ToListAsync();
+
+            return Ok(libros);
+        }
+
+        [HttpGet]
+        [Route("GetLibrosParaReponer")]
+        [ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaReponer()
+        {
+            var libros = await _context.Libros
+                .Include(l => l.Genero)
+                .Include(l => l.Editorial)
+                .Select(l => new LibroParaReponerDTO(
+                    l.Id, 
+                    l.Titulo, 
+                    l.Genero.Nombre, 
+                    l.FechaLanzamiento, 
+                    l.PrecioReposicion, 
+                    l.Autor
+                ))
+                .ToListAsync();
+
+            return Ok(libros);
+        }
     }
 }
