@@ -11,6 +11,12 @@ namespace AppForSEII.API.Models
 
         public int ResenaId { get; set; }
 
+        [ForeignKey("LibroId")]
+        public virtual Libro? Libro { get; set; }
+
+        [ForeignKey("ResenaId")]
+        public virtual Resena? Resena { get; set; }
+
         [StringLength(100, MinimumLength = 20, ErrorMessage = "La descripción debe tener entre 20 y 100 caracteres.")]
         public string? Descripcion { get; set; }
 
