@@ -8,12 +8,13 @@ public class ApplicationUser : IdentityUser
     public ApplicationUser()
     {
     }
-    public ApplicationUser(string id, string name, string surname, string userName)
+    public ApplicationUser(string id, string name, string surname, string userName,string direccion)
     {
         Id = id;
         Name = name;
         Surname = surname;
         UserName = userName;
+        Direccion = direccion;
         Email = userName;
     }
 
@@ -22,4 +23,7 @@ public class ApplicationUser : IdentityUser
 
     [StringLength(50)]
     public string? Surname {get;set;}
+
+    [StringLength(100)]
+    public string? Direccion { get; set; }
 }

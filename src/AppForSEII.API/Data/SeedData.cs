@@ -43,7 +43,7 @@ namespace AppForSEII.API.Data {
 
         public static void SeedUsers(UserManager<ApplicationUser> userManager, List<string> roles) {
             if (userManager.FindByNameAsync("elena@uclm.es").Result == null) {
-                ApplicationUser user = new ApplicationUser("1", "Elena", "Navarro Martínez", "elena@uclm.es");
+                ApplicationUser user = new ApplicationUser("1", "Elena", "Navarro Martínez", "elena@uclm.es", "Calle Principal 1");
                 user.EmailConfirmed = true;
 
                 var result = userManager.CreateAsync(user, "Password1234%");
@@ -55,7 +55,7 @@ namespace AppForSEII.API.Data {
             }
 
             if (userManager.FindByNameAsync("peter@uclm.es").Result == null) {
-                ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es");
+                ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es", "Calle Mayor 2");
                 user.EmailConfirmed = true;
 
                 var result = userManager.CreateAsync(user, "OtherPass12$");
