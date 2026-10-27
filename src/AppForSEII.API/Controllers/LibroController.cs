@@ -24,28 +24,40 @@ namespace AppForSEII.API.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        [Route("GetLibrosParaComprar")]
-        [ProducesResponseType(typeof(IList<LibroParaComprarDTO>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetLibrosParaComprar()
-        {
-            var libros = await _context.Libros
-                .Include(l => l.Genero)
-                .Include(l => l.Editorial)
-                .Where(l => l.Stock > 0)
-                .Select(l => new LibroParaComprarDTO(
-                    l.Id, 
-                    l.Titulo, 
-                    l.PrecioCompra, 
-                    l.FechaLanzamiento, 
-                    l.Genero.Nombre, 
-                    l.Editorial.Nombre
-                ))
-                .ToListAsync();
 
-            return Ok(libros);
-        }
+[HttpGet]
+[Route("GetLibrosParaComprar")]
+[ProducesResponseType(typeof(IList<LibroParaComprarDTO>), (int)HttpStatusCode.OK)]
+[ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+public async Task<ActionResult> GetLibrosParaComprar(string? genero, decimal? precioMax)
+{
+    // Validación lógica de los parámetros de entrada
+    if (precioMax != null && precioMax < 0)
+    {
+        ModelState.AddModelError("precioMax", "El precio máximo filtrado no puede ser un valor negativo.");
+        _logger.LogError($"{DateTime.Now} Error: precioMax ({precioMax}) es menor que 0");
+        return BadRequest(new ValidationProblemDetails(ModelState));
+    }
 
+    var libros = await _context.Libros
+        .Include(l => l.Genero)
+        .Include(l => l.Editorial)
+        .Where(l => l.Stock > 0 
+            && (genero == null || l.Genero.Nombre.Equals(genero))
+            && (precioMax == null || l.PrecioCompra <= precioMax))
+        .OrderBy(l => l.Titulo)
+        .Select(l => new LibroParaComprarDTO(
+            l.Id,
+            l.Titulo,
+            l.PrecioCompra,
+            l.FechaLanzamiento,
+            l.Genero.Nombre,
+            l.Editorial.Nombre
+        ))
+        .ToListAsync();
+
+    return Ok(libros);
+}
         [HttpGet]
         [Route("GetLibrosParaResenar")]
         [ProducesResponseType(typeof(IList<LibroParaResenarDTO>), (int)HttpStatusCode.OK)]
