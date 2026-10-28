@@ -29,5 +29,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<MetodoPago> MetodosPago { get; set; }
     public DbSet<Libro> Libros { get; set; }
     public DbSet<PayPal> PayPals { get; set; }
-
+    public DbSet<Reposicion> Reposiciones { get; set; }
+    public DbSet<ReposicionItem> ReposicionItems { get; set; }
 }
