@@ -93,24 +93,44 @@ public async Task<ActionResult> GetLibrosParaResenar(string? genero, string? edi
 }
 
         [HttpGet]
-        [Route("GetLibrosParaReponer")]
-        [ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetLibrosParaReponer()
-        {
-            var libros = await _context.Libros
-                .Include(l => l.Genero)
-                .Include(l => l.Editorial)
-                .Select(l => new LibroParaReponerDTO(
-                    l.Id, 
-                    l.Titulo, 
-                    l.Genero.Nombre, 
-                    l.FechaLanzamiento, 
-                    l.PrecioReposicion, 
-                    l.Autor
-                ))
-                .ToListAsync();
+[Route("GetLibrosParaReponer")]
+[ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+[ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+public async Task<ActionResult> GetLibrosParaReponer(string? autor, string? genero)
+{
+    // Validación de parámetros
+    if (autor != null && string.IsNullOrWhiteSpace(autor))
+    {
+        ModelState.AddModelError("autor", "El filtro de autor no puede estar vacío si se proporciona.");
+        _logger.LogError($"{DateTime.Now} Error: El filtro de autor está vacío.");
+        return BadRequest(new ValidationProblemDetails(ModelState));
+    }
 
-            return Ok(libros);
-        }
+    if (genero != null && string.IsNullOrWhiteSpace(genero))
+    {
+        ModelState.AddModelError("genero", "El filtro de género no puede estar vacío si se proporciona.");
+        _logger.LogError($"{DateTime.Now} Error: El filtro de género está vacío.");
+        return BadRequest(new ValidationProblemDetails(ModelState));
+    }
+
+    var libros = await _context.Libros
+        .Include(l => l.Genero)
+        .Include(l => l.Editorial)
+        .Where(l => l.Stock == 0
+                 && (autor == null || l.Autor.Contains(autor))
+                 && (genero == null || l.Genero.Nombre.Equals(genero)))
+        .OrderBy(l => l.Titulo)
+        .Select(l => new LibroParaReponerDTO(
+            l.Id,
+            l.Titulo,
+            l.Genero.Nombre,
+            l.FechaLanzamiento,
+            l.PrecioReposicion,
+            l.Autor
+        ))
+        .ToListAsync();
+
+    return Ok(libros);
+}
     }
 }
