@@ -283,6 +283,35 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Reposiciones",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PrecioTotal = table.Column<double>(type: "float", nullable: false),
+                    Comentario = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MetodoPagoId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reposiciones", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reposiciones_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reposiciones_MetodosPago_MetodoPagoId",
+                        column: x => x.MetodoPagoId,
+                        principalTable: "MetodosPago",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ReponeItem",
                 columns: table => new
                 {
@@ -353,6 +382,33 @@ namespace AppForSEII.API.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ReposicionItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
+                    LibroId = table.Column<int>(type: "int", nullable: false),
+                    ReposicionId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReposicionItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ReposicionItems_Libros_LibroId",
+                        column: x => x.LibroId,
+                        principalTable: "Libros",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReposicionItems_Reposiciones_ReposicionId",
+                        column: x => x.ReposicionId,
+                        principalTable: "Reposiciones",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -418,6 +474,26 @@ namespace AppForSEII.API.Migrations
                 column: "GeneroId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Reposiciones_ApplicationUserId",
+                table: "Reposiciones",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reposiciones_MetodoPagoId",
+                table: "Reposiciones",
+                column: "MetodoPagoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReposicionItems_LibroId",
+                table: "ReposicionItems",
+                column: "LibroId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReposicionItems_ReposicionId",
+                table: "ReposicionItems",
+                column: "ReposicionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ResenaItems_ResenaId",
                 table: "ResenaItems",
                 column: "ResenaId");
@@ -453,6 +529,9 @@ namespace AppForSEII.API.Migrations
                 name: "ReponeItem");
 
             migrationBuilder.DropTable(
+                name: "ReposicionItems");
+
+            migrationBuilder.DropTable(
                 name: "ResenaItems");
 
             migrationBuilder.DropTable(
@@ -460,6 +539,9 @@ namespace AppForSEII.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "Compras");
+
+            migrationBuilder.DropTable(
+                name: "Reposiciones");
 
             migrationBuilder.DropTable(
                 name: "Libros");
