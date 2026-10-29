@@ -277,6 +277,66 @@ namespace AppForSEII.API.Migrations
                     b.ToTable("ReponeItem");
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comentario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaReposicion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MetodoPagoId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("PrecioTotal")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("MetodoPagoId");
+
+                    b.ToTable("Reposiciones");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.ReposicionItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LibroId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReposicionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LibroId");
+
+                    b.HasIndex("ReposicionId");
+
+                    b.ToTable("ReposicionItems");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.Resena", b =>
                 {
                     b.Property<int>("Id")
@@ -531,6 +591,44 @@ namespace AppForSEII.API.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
+                {
+                    b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AppForSEII.API.Models.MetodoPago", "MetodoPago")
+                        .WithMany()
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MetodoPago");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.ReposicionItem", b =>
+                {
+                    b.HasOne("AppForSEII.API.Models.Libro", "Libro")
+                        .WithMany()
+                        .HasForeignKey("LibroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AppForSEII.API.Models.Reposicion", "Reposicion")
+                        .WithMany("ReposicionItems")
+                        .HasForeignKey("ReposicionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Libro");
+
+                    b.Navigation("Reposicion");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.Resena", b =>
                 {
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "ApplicationUser")
@@ -629,6 +727,11 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("ReponeItems");
 
                     b.Navigation("ResenaItems");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
+                {
+                    b.Navigation("ReposicionItems");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Resena", b =>
