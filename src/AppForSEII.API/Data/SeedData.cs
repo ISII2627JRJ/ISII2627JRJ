@@ -23,10 +23,22 @@ namespace AppForSEII.API.Data {
             }
 
             try {
+                SeedGeneros(dbContext);
+                SeedEditoriales(dbContext);
                 SeedLibros(dbContext);
+                SeedMetodosPago(dbContext);
+                
+                SeedCompras(dbContext, userManager);
+                SeedCompraItems(dbContext);
+                
+                SeedReposiciones(dbContext, userManager);
+                SeedReposicionItems(dbContext);
+                
+                SeedResenas(dbContext, userManager);
+                SeedResenaItems(dbContext);
             }
             catch (Exception ex) {
-                logger.LogError(ex, "An error occurred seeding the Libros in the Database.");
+                logger.LogError(ex, "Error occurred seeding the database with initial data.");
             }
         }
 
@@ -67,131 +79,159 @@ namespace AppForSEII.API.Data {
             }
         }
 
-        public static void SeedLibros(ApplicationDbContext dbContext) {
-          
-            if (!dbContext.Libros.Any()) { 
+    public static void SeedGeneros(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<Genero>().Any())
+            {
+                dbContext.AddRange(
+                    new Genero(0, "Fantasía"),
+                    new Genero(0, "Ciencia Ficción"),
+                    new Genero(0, "Terror"),
+                    new Genero(0, "Misterio")
+                );
+                dbContext.SaveChanges();
+            }
+        }
+
+        public static void SeedEditoriales(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<Editorial>().Any())
+            {
+                dbContext.AddRange(
+                    new Editorial(0, "Minotauro"),
+                    new Editorial(0, "Gigamesh"),
+                    new Editorial(0, "Salamandra"),
+                    new Editorial(0, "Plaza & Janés")
+                );
+                dbContext.SaveChanges();
+            }
+        }
+
+        public static void SeedLibros(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<Libro>().Any())
+            {
+                var gFantasia = dbContext.Set<Genero>().First(g => g.Nombre == "Fantasía");
+                var gCiencia = dbContext.Set<Genero>().First(g => g.Nombre == "Ciencia Ficción");
+                var gTerror = dbContext.Set<Genero>().First(g => g.Nombre == "Terror");
                 
-               
-               Genero genero1 = new Genero { Nombre = "Fantasía" };
-                Genero genero2 = new Genero { Nombre = "Ciencia Ficción" };
-                Genero genero3 = new Genero { Nombre = "Misterio" };
-                Genero genero4 = new Genero { Nombre = "Terror" };
+                var edMinotauro = dbContext.Set<Editorial>().First(e => e.Nombre == "Minotauro");
+                var edGigamesh = dbContext.Set<Editorial>().First(e => e.Nombre == "Gigamesh");
+                var edPlaza = dbContext.Set<Editorial>().First(e => e.Nombre == "Plaza & Janés");
 
-                // Editoriales
-                Editorial editorial1 = new Editorial { Nombre = "Minotauro" };
-                Editorial editorial2 = new Editorial { Nombre = "Gigamesh" };
-                Editorial editorial3 = new Editorial { Nombre = "Salamandra" };
-                Editorial editorial4 = new Editorial { Nombre = "Plaza & Janés" };
+                dbContext.AddRange(
+                    new Libro(0, "El Señor de los Anillos", "J.R.R. Tolkien", new DateTime(1954, 7, 29), 20.50m, 15.00m, 10, "Tapa dura", 4.9, gFantasia, edMinotauro),
+                    new Libro(0, "Dune", "Frank Herbert", new DateTime(1965, 8, 1), 18.90m, 12.50m, 15, "Bolsillo", 4.8, gCiencia, edGigamesh),
+                    new Libro(0, "El Resplandor", "Stephen King", new DateTime(1977, 1, 28), 22.00m, 16.00m, 0, "Tapa dura", 4.5, gTerror, edPlaza), // Stock = 0
+                    new Libro(0, "It", "Stephen King", new DateTime(1986, 9, 15), 25.00m, 18.00m, 0, "Bolsillo", 4.6, gTerror, edPlaza) // Stock = 0
+                );
+                dbContext.SaveChanges();
+            }
+        }
 
-                // Libros
-                Libro libro1 = new Libro {
-                    Titulo = "El Señor de los Anillos",
-                    Autor = "J.R.R. Tolkien",
-                    FechaLanzamiento = new DateTime(1954, 7, 29),
-                    PrecioCompra = 20.50m, 
-                    Stock = 10,
-                    PrecioReposicion = 15.00m, 
-                    TipoLibro = "Tapa dura", 
-                    CalificacionMedia = 4.9,
-                    Genero = genero1,
-                    Editorial = editorial1
-                };
+        public static void SeedMetodosPago(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<MetodoPago>().Any())
+            {
+                Visa visa = new Visa(DateTime.Now.AddYears(2)) { NumeroTarjeta = "4123456789123456" };
+                GooglePay googlePay = new GooglePay("pagos@uclm.es");
+                PayPal payPal = new PayPal("600123456");
 
-                Libro libro2 = new Libro {
-                    Titulo = "Dune",
-                    Autor = "Frank Herbert",
-                    FechaLanzamiento = new DateTime(1965, 8, 1),
-                    PrecioCompra = 18.90m, 
-                    Stock = 15,
-                    PrecioReposicion = 12.50m, 
-                    TipoLibro = "Bolsillo", 
-                    CalificacionMedia = 4.8,
-                    Genero = genero2,
-                    Editorial = editorial2
-                };
+                dbContext.AddRange(visa, googlePay, payPal);
+                dbContext.SaveChanges();
+            }
+        }
 
-                Libro libro3 = new Libro {
-                    Titulo = "Harry Potter y la Piedra Filosofal",
-                    Autor = "J.K. Rowling",
-                    FechaLanzamiento = new DateTime(1997, 6, 26),
-                    PrecioCompra = 15.00m, 
-                    Stock = 20,
-                    PrecioReposicion = 10.00m, 
-                    TipoLibro = "Tapa blanda", 
-                    CalificacionMedia = 4.7,
-                    Genero = genero1,
-                    Editorial = editorial3
-                };
+        public static void SeedCompras(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+        {
+            if (!dbContext.Set<Compra>().Any())
+            {
+                var cliente = userManager.FindByNameAsync("peter@uclm.es").Result;
+                var visa = dbContext.Set<Visa>().First();
+                var googlePay = dbContext.Set<GooglePay>().First();
 
-                Libro libro4 = new Libro {
-                    Titulo = "El Resplandor",
-                    Autor = "Stephen King",
-                    FechaLanzamiento = new DateTime(1977, 1, 28),
-                    PrecioCompra = 22.00m, 
-                    Stock = 5,
-                    PrecioReposicion = 16.00m, 
-                    TipoLibro = "Tapa dura", 
-                    CalificacionMedia = 4.5,
-                    Genero = genero4,
-                    Editorial = editorial4
-                };
+                dbContext.AddRange(
+                    new Compra(0, DateTime.Now.AddDays(-3), 97.70m, null, cliente.Id, cliente, visa.Id, visa, new List<CompraItem>()),
+                    new Compra(0, DateTime.Now.AddDays(-1), 41.00m, "DTO10", cliente.Id, cliente, googlePay.Id, googlePay, new List<CompraItem>())
+                );
+                dbContext.SaveChanges();
+            }
+        }
 
-                Libro libro5 = new Libro {
-                    Titulo = "1984",
-                    Autor = "George Orwell",
-                    FechaLanzamiento = new DateTime(1949, 6, 8),
-                    PrecioCompra = 14.50m, 
-                    Stock = 30,
-                    PrecioReposicion = 9.00m, 
-                    TipoLibro = "Bolsillo", 
-                    CalificacionMedia = 4.6,
-                    Genero = genero2,
-                    Editorial = editorial4
-                };
+        public static void SeedCompraItems(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<CompraItem>().Any())
+            {
+                var compras = dbContext.Set<Compra>().ToList();
+                var l1 = dbContext.Set<Libro>().First(l => l.Titulo == "El Señor de los Anillos");
+                var l2 = dbContext.Set<Libro>().First(l => l.Titulo == "Dune");
 
-                Libro libro6 = new Libro {
-                    Titulo = "Diez negritos",
-                    Autor = "Agatha Christie",
-                    FechaLanzamiento = new DateTime(1939, 11, 6),
-                    PrecioCompra = 12.00m, 
-                    Stock = 12,
-                    PrecioReposicion = 8.00m, 
-                    TipoLibro = "Bolsillo", 
-                    CalificacionMedia = 4.4,
-                    Genero = genero3,
-                    Editorial = editorial3
-                };
+                dbContext.AddRange(
+                    new CompraItem(2, l1.Id, l1, compras[0].Id, compras[0]),
+                    new CompraItem(3, l2.Id, l2, compras[0].Id, compras[0]),
+                    new CompraItem(2, l1.Id, l1, compras[1].Id, compras[1])
+                );
+                dbContext.SaveChanges();
+            }
+        }
 
-                Libro libro7 = new Libro {
-                    Titulo = "Drácula",
-                    Autor = "Bram Stoker",
-                    FechaLanzamiento = new DateTime(1897, 5, 26),
-                    PrecioCompra = 16.50m, 
-                    Stock = 8,
-                    PrecioReposicion = 11.00m, 
-                    TipoLibro = "Tapa blanda", 
-                    CalificacionMedia = 4.3,
-                    Genero = genero4,
-                    Editorial = editorial1
-                };
+        public static void SeedReposiciones(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+        {
+            if (!dbContext.Set<Reposicion>().Any())
+            {
+                var admin = userManager.FindByNameAsync("elena@uclm.es").Result;
+                var payPal = dbContext.Set<PayPal>().First();
 
-                Libro libro8 = new Libro {
-                    Titulo = "El Juego de Ender",
-                    Autor = "Orson Scott Card",
-                    FechaLanzamiento = new DateTime(1985, 1, 15),
-                    PrecioCompra = 19.00m, 
-                    Stock = 25,
-                    PrecioReposicion = 14.00m, 
-                    TipoLibro = "Tapa dura", 
-                    CalificacionMedia = 4.7,
-                    Genero = genero2,
-                    Editorial = editorial2
-                };
+                var repo = new Reposicion(0, DateTime.Now, 320.00, "Reposición urgente stock 0");
+                repo.ApplicationUserId = admin.Id;
+                repo.Usuario = admin;
+                repo.MetodoPagoId = payPal.Id;
+                repo.MetodoPago = payPal;
 
-                dbContext.AddRange(genero1, genero2, genero3, genero4);
-                dbContext.AddRange(editorial1, editorial2, editorial3, editorial4);
-                dbContext.AddRange(libro1, libro2, libro3, libro4, libro5, libro6, libro7, libro8);
+                dbContext.Add(repo);
+                dbContext.SaveChanges();
+            }
+        }
 
+        public static void SeedReposicionItems(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<ReposicionItem>().Any())
+            {
+                var repo = dbContext.Set<Reposicion>().First();
+                var l1 = dbContext.Set<Libro>().First(l => l.Titulo == "El Resplandor");
+                var l2 = dbContext.Set<Libro>().First(l => l.Titulo == "It");
+
+                dbContext.AddRange(
+                    new ReposicionItem(0, 10, l1.Id, repo.Id),
+                    new ReposicionItem(0, 20, l2.Id, repo.Id)
+                );
+                dbContext.SaveChanges();
+            }
+        }
+
+        public static void SeedResenas(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+        {
+            if (!dbContext.Set<Resena>().Any())
+            {
+                var cliente = userManager.FindByNameAsync("peter@uclm.es").Result;
+
+                dbContext.Add(new Resena(0, DateTime.Now.AddDays(-2), cliente.Id));
+                dbContext.SaveChanges();
+            }
+        }
+
+        public static void SeedResenaItems(ApplicationDbContext dbContext)
+        {
+            if (!dbContext.Set<ResenaItem>().Any())
+            {
+                var resena = dbContext.Set<Resena>().First();
+                var l1 = dbContext.Set<Libro>().First(l => l.Titulo == "El Señor de los Anillos");
+                var l2 = dbContext.Set<Libro>().First(l => l.Titulo == "Dune");
+
+                dbContext.AddRange(
+                    new ResenaItem(l1.Id, resena.Id, "Una obra maestra que todo el mundo debe leer.", 5),
+                    new ResenaItem(l2.Id, resena.Id, "Muy buen libro de ciencia ficción, me encantó.", 4)
+                );
                 dbContext.SaveChanges();
             }
         }
