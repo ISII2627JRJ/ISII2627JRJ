@@ -57,6 +57,8 @@ namespace AppForSEII.API.Data {
             if (userManager.FindByNameAsync("elena@uclm.es").Result == null) {
                 ApplicationUser user = new ApplicationUser("1", "Elena", "Navarro Martínez", "elena@uclm.es", "Calle Principal 1");
                 user.EmailConfirmed = true;
+                user.UserName = "elena@uclm.es";
+                user.PhoneNumber = "678371248";
 
                 var result = userManager.CreateAsync(user, "Password1234%");
                 result.Wait();
@@ -69,7 +71,8 @@ namespace AppForSEII.API.Data {
             if (userManager.FindByNameAsync("peter@uclm.es").Result == null) {
                 ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es", "Calle Mayor 2");
                 user.EmailConfirmed = true;
-
+                user.UserName = "peter@uclm.es";
+                user.PhoneNumber = "678371249";
                 var result = userManager.CreateAsync(user, "OtherPass12$");
                 result.Wait();
 
@@ -147,14 +150,16 @@ namespace AppForSEII.API.Data {
             if (!dbContext.Set<Compra>().Any())
             {
                 var cliente = userManager.FindByNameAsync("peter@uclm.es").Result;
-                var visa = dbContext.Set<Visa>().First();
-                var googlePay = dbContext.Set<GooglePay>().First();
+              var visa = dbContext.Set<MetodoPago>().Find(1);
+        var googlePay = dbContext.Set<MetodoPago>().Find(2);
 
-                dbContext.AddRange(
+                if (cliente != null && visa != null && googlePay != null){
+                     dbContext.AddRange(
                     new Compra(0, DateTime.Now.AddDays(-3), 97.70m, null, cliente.Id, cliente, visa.Id, visa, new List<CompraItem>()),
                     new Compra(0, DateTime.Now.AddDays(-1), 41.00m, "DTO10", cliente.Id, cliente, googlePay.Id, googlePay, new List<CompraItem>())
                 );
                 dbContext.SaveChanges();
+                }
             }
         }
 
@@ -163,6 +168,8 @@ namespace AppForSEII.API.Data {
             if (!dbContext.Set<CompraItem>().Any())
             {
                 var compras = dbContext.Set<Compra>().ToList();
+                if (compras.Count >= 2)
+        {
                 var l1 = dbContext.Set<Libro>().First(l => l.Titulo == "El Señor de los Anillos");
                 var l2 = dbContext.Set<Libro>().First(l => l.Titulo == "Dune");
 
@@ -172,6 +179,7 @@ namespace AppForSEII.API.Data {
                     new CompraItem(2, l1.Id, l1, compras[1].Id, compras[1])
                 );
                 dbContext.SaveChanges();
+                }
             }
         }
 
@@ -180,8 +188,7 @@ namespace AppForSEII.API.Data {
             if (!dbContext.Set<Reposicion>().Any())
             {
                 var admin = userManager.FindByNameAsync("elena@uclm.es").Result;
-                var payPal = dbContext.Set<PayPal>().First();
-
+                var payPal = dbContext.Set<MetodoPago>().AsEnumerable().OfType<PayPal>().First();
                 var repo = new Reposicion(0, DateTime.Now, 320.00, "Reposición urgente stock 0");
                 repo.ApplicationUserId = admin.Id;
                 repo.Usuario = admin;

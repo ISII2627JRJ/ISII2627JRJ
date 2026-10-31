@@ -47,7 +47,7 @@ public async Task<ActionResult> GetDetailsForCompras(int id)
             c.Usuario.PhoneNumber ?? "",      
             c.FechaCompra,
             c.PrecioTotal,
-            c.MetodoPago.GetType().Name,
+            c.MetodoPagoId == 1 ? "Visa" : (c.MetodoPagoId == 2 ? "GooglePay" : "PayPal"),          
             c.CodigoDescuento,
             c.CompraItems.Select(ci => new CompraItemDTO(
                 ci.Libro.Id,
@@ -140,7 +140,7 @@ public async Task<ActionResult> CreateCompra(CompraForCreateDTO compraForCreate)
         {
             libro.Stock -= item.Cantidad;
 
-            // 3. Uso estricto del constructor de CompraItem
+            //  Uso estricto del constructor de CompraItem
             compra.CompraItems.Add(new CompraItem(
                 item.Cantidad, 
                 libro.Id, 
