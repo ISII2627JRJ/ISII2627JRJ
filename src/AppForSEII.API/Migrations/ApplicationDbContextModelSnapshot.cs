@@ -514,6 +514,17 @@ namespace AppForSEII.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.GooglePay", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("GooglePay");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.PayPal", b =>
                 {
                     b.HasBaseType("AppForSEII.API.Models.MetodoPago");
@@ -523,6 +534,20 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("PayPal");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<DateTime>("FechaCaducidad")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NumeroTarjeta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("Visa");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Compra", b =>
