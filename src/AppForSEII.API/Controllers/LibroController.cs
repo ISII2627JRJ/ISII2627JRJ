@@ -62,12 +62,19 @@ public async Task<ActionResult> GetLibrosParaComprar(string? genero, decimal? pr
 [Route("GetLibrosParaResenar")]
 [ProducesResponseType(typeof(IList<LibroParaResenarDTO>), (int)HttpStatusCode.OK)]
 [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
-public async Task<ActionResult> GetLibrosParaResenar(string? genero, string? editorial)
+public async Task<ActionResult> GetLibrosParaResenar(string? genero, string? tipoLibro)
 {
     if (genero != null && string.IsNullOrWhiteSpace(genero))
     {
-        ModelState.AddModelError("genero", "El parámetro de género no puede estar vacío si se proporciona.");
+        ModelState.AddModelError("genero", "El parámetro de género no puede estar vacío.");
         _logger.LogError($"{DateTime.Now} Error: el filtro de género está vacío.");
+        return BadRequest(new ValidationProblemDetails(ModelState));
+    }
+
+    if (tipoLibro != null && string.IsNullOrWhiteSpace(tipoLibro))
+    {
+        ModelState.AddModelError("tipoLibro", "El parámetro de tipo de libro no puede estar vacío.");
+        _logger.LogError($"{DateTime.Now} Error: el filtro de tipo de libro está vacío.");
         return BadRequest(new ValidationProblemDetails(ModelState));
     }
 
@@ -75,16 +82,16 @@ public async Task<ActionResult> GetLibrosParaResenar(string? genero, string? edi
         .Include(l => l.Genero)
         .Include(l => l.Editorial)
         .Where(l => (genero == null || l.Genero.Nombre.Equals(genero))
-                 && (editorial == null || l.Editorial.Nombre.Equals(editorial)))
+                 && (tipoLibro == null || l.TipoLibro.Equals(tipoLibro)))
         .OrderBy(l => l.Titulo)
         .Select(l => new LibroParaResenarDTO(
             l.Id,
             l.Titulo,
-            l.TipoLibro,           // Si es un Enum en la BD, quizá necesites: l.TipoLibro.ToString()
+            l.TipoLibro,           
             l.Genero.Nombre,
             l.Editorial.Nombre,
             l.Autor,
-            l.CalificacionMedia,   // Asegúrate de que esta propiedad exista en tu clase Libro
+            l.CalificacionMedia,   
             l.FechaLanzamiento
         ))
         .ToListAsync();
