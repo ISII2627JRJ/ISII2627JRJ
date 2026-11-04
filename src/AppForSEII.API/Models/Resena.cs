@@ -13,6 +13,10 @@ namespace AppForSEII.API.Models
         public DateTime Fecha { get; set; }
 
         [Required]
+        [StringLength(20, MinimumLength = 10)]
+        public string TituloResena { get; set; } = string.Empty;
+
+        [Required]
         public string ApplicationUserId { get; set; }
 
         [ForeignKey("ApplicationUserId")]

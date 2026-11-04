@@ -42,6 +42,7 @@ namespace AppForSEII.API.Models
         public DateTime FechaCompra { get; set; }
         
         [DataType(DisplayDataType.Currency)]
+        [Range(0, 100000, ErrorMessage = "El precio total no puede ser negativo")]
         public decimal PrecioTotal { get; set; }
         
         [StringLength(10, MinimumLength = 5)] 

@@ -20,10 +20,12 @@ namespace AppForSEII.API.Models
 
         public int Id { get; set; }
         public DateTime FechaReposicion { get; set; }
-        public double PrecioTotal { get; set; }
-        public string Comentario { get; set; }
 
-        // --- PROPIEDADES QUE FALTABAN ---
+        [Range(0,100000)]
+        public double PrecioTotal { get; set; }
+
+        [StringLength(100, MinimumLength = 20)]
+        public string? Comentario { get; set; }
 
         // 1. Relación con el usuario
         public string ApplicationUserId { get; set; } = string.Empty;

@@ -40,14 +40,18 @@ namespace AppForSEII.API.Models
         public DateTime FechaLanzamiento { get; set; }
 
         [DataType(DisplayDataType.Currency)]
+        [Range(0, 10000, ErrorMessage = "El precio no puede ser negativo")]
         public decimal PrecioCompra { get; set; }
 
         [DataType(DisplayDataType.Currency)]
+        [Range(0, 10000, ErrorMessage = "El precio no puede ser negativo")]
         public decimal PrecioReposicion { get; set; }
 
         [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "El stock no puede ser negativo")]
         public int Stock { get; set; }
 
+        [Required]
         [StringLength(50, MinimumLength = 10)]
         public string TipoLibro { get; set; }
 
