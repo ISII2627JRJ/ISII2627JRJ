@@ -38,5 +38,23 @@ namespace AppForSEII.API.DTOs
             Comentario = comentario;
             ReposicionItems = reposicionItems;
         }
+                public override bool Equals(object? obj)
+        {
+            return obj is ReposicionDetailDTO dTO &&
+                   Id == dTO.Id &&
+                   Nombre == dTO.Nombre &&
+                   PrimerApellido == dTO.PrimerApellido &&
+                   Telefono == dTO.Telefono &&
+                   FechaReposicion == dTO.FechaReposicion &&
+                   PrecioTotal == dTO.PrecioTotal &&
+                   MetodoPago == dTO.MetodoPago &&
+                   Comentario == dTO.Comentario &&
+                   ReposicionItems.SequenceEqual(dTO.ReposicionItems);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, Nombre, PrimerApellido, Telefono, FechaReposicion, PrecioTotal, MetodoPago, Comentario);
+        }
     }
 }
