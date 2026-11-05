@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppForSEII.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261029090411_CreateIdentitySchema")]
+    [Migration("20261105082829_CreateIdentitySchema")]
     partial class CreateIdentitySchema
     {
         /// <inheritdoc />
@@ -261,25 +261,6 @@ namespace AppForSEII.API.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("AppForSEII.API.Models.ReponeItem", b =>
-                {
-                    b.Property<int>("LibroId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReposicionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CantidadRepuesta")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaReposicion")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("LibroId", "ReposicionId");
-
-                    b.ToTable("ReponeItem");
-                });
-
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
                 {
                     b.Property<int>("Id")
@@ -293,8 +274,8 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("FechaReposicion")
                         .HasColumnType("datetime2");
@@ -354,6 +335,11 @@ namespace AppForSEII.API.Migrations
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TituloResena")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -517,6 +503,17 @@ namespace AppForSEII.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.GooglePay", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("GooglePay");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.PayPal", b =>
                 {
                     b.HasBaseType("AppForSEII.API.Models.MetodoPago");
@@ -526,6 +523,20 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("PayPal");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<DateTime>("FechaCaducidad")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NumeroTarjeta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("Visa");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Compra", b =>
@@ -585,15 +596,6 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("Genero");
                 });
 
-            modelBuilder.Entity("AppForSEII.API.Models.ReponeItem", b =>
-                {
-                    b.HasOne("AppForSEII.API.Models.Libro", null)
-                        .WithMany("ReponeItems")
-                        .HasForeignKey("LibroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
                 {
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
@@ -616,7 +618,7 @@ namespace AppForSEII.API.Migrations
             modelBuilder.Entity("AppForSEII.API.Models.ReposicionItem", b =>
                 {
                     b.HasOne("AppForSEII.API.Models.Libro", "Libro")
-                        .WithMany()
+                        .WithMany("ReponeItems")
                         .HasForeignKey("LibroId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

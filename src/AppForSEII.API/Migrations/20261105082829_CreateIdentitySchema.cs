@@ -86,7 +86,10 @@ namespace AppForSEII.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Discriminator = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    NumeroTelefono = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumeroTelefono = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumeroTarjeta = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FechaCaducidad = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -206,6 +209,7 @@ namespace AppForSEII.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TituloResena = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -290,7 +294,7 @@ namespace AppForSEII.API.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PrecioTotal = table.Column<double>(type: "float", nullable: false),
-                    Comentario = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comentario = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     MetodoPagoId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -307,26 +311,6 @@ namespace AppForSEII.API.Migrations
                         name: "FK_Reposiciones_MetodosPago_MetodoPagoId",
                         column: x => x.MetodoPagoId,
                         principalTable: "MetodosPago",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ReponeItem",
-                columns: table => new
-                {
-                    LibroId = table.Column<int>(type: "int", nullable: false),
-                    ReposicionId = table.Column<int>(type: "int", nullable: false),
-                    CantidadRepuesta = table.Column<int>(type: "int", nullable: false),
-                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ReponeItem", x => new { x.LibroId, x.ReposicionId });
-                    table.ForeignKey(
-                        name: "FK_ReponeItem_Libros_LibroId",
-                        column: x => x.LibroId,
-                        principalTable: "Libros",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -524,9 +508,6 @@ namespace AppForSEII.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "CompraItems");
-
-            migrationBuilder.DropTable(
-                name: "ReponeItem");
 
             migrationBuilder.DropTable(
                 name: "ReposicionItems");

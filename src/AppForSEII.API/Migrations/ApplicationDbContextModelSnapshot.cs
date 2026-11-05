@@ -258,25 +258,6 @@ namespace AppForSEII.API.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("AppForSEII.API.Models.ReponeItem", b =>
-                {
-                    b.Property<int>("LibroId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReposicionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CantidadRepuesta")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaReposicion")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("LibroId", "ReposicionId");
-
-                    b.ToTable("ReponeItem");
-                });
-
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
                 {
                     b.Property<int>("Id")
@@ -290,8 +271,8 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("FechaReposicion")
                         .HasColumnType("datetime2");
@@ -351,6 +332,11 @@ namespace AppForSEII.API.Migrations
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TituloResena")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -607,15 +593,6 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("Genero");
                 });
 
-            modelBuilder.Entity("AppForSEII.API.Models.ReponeItem", b =>
-                {
-                    b.HasOne("AppForSEII.API.Models.Libro", null)
-                        .WithMany("ReponeItems")
-                        .HasForeignKey("LibroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
                 {
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
@@ -638,7 +615,7 @@ namespace AppForSEII.API.Migrations
             modelBuilder.Entity("AppForSEII.API.Models.ReposicionItem", b =>
                 {
                     b.HasOne("AppForSEII.API.Models.Libro", "Libro")
-                        .WithMany()
+                        .WithMany("ReponeItems")
                         .HasForeignKey("LibroId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
