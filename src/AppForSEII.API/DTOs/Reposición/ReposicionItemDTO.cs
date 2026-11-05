@@ -16,5 +16,18 @@ namespace AppForSEII.API.DTOs
             Autor = autor;
             Cantidad = cantidad;
         }
+                public override bool Equals(object? obj)
+        {
+            return obj is ReposicionItemDTO dTO &&
+                   LibroId == dTO.LibroId &&
+                   Titulo == dTO.Titulo &&
+                   Autor == dTO.Autor &&
+                   Cantidad == dTO.Cantidad;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(LibroId, Titulo, Autor, Cantidad);
+        }
     }
 }
