@@ -70,112 +70,130 @@ namespace AppForSEII.API.Controllers
         [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> CrearReposicion([FromBody] ReposicionForCreateDTO dto)
         {
-    // 1. Validar lista de libros vacía
-    if (dto.Libros == null || !dto.Libros.Any())
-    {
-        ModelState.AddModelError("Libros", "Debe seleccionar al menos un libro para reponer.");
-        _logger.LogError($"{DateTime.Now} Error: Intento de reponer sin libros seleccionados.");
-        return BadRequest(new ValidationProblemDetails(ModelState));
-    }
+            // 1. Debe haber al menos un libro
+            if (dto.Libros == null || !dto.Libros.Any())
+                ModelState.AddModelError("Libros", "Debe seleccionar al menos un libro para reponer.");
 
-    // 2. Validar cantidad mayor que 1 por cada libro (Paso 5)
-    foreach (var item in dto.Libros)
-    {
-        if (item.Cantidad <= 1)
-        {
-            ModelState.AddModelError("Cantidad", $"La cantidad a reponer del libro con ID {item.LibroId} debe ser mayor que 1.");
-            _logger.LogError($"{DateTime.Now} Error: Cantidad no válida ({item.Cantidad}) para el libro ID {item.LibroId}.");
+            // 2. El usuario debe existir
+            var user = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.UserName == dto.UserName);
+            if (user == null)
+                ModelState.AddModelError("UserName", "El usuario no está registrado.");
+
+            // 3. Comentario opcional entre 20 y 100 caracteres
+            if (!string.IsNullOrWhiteSpace(dto.Comentario) &&
+                (dto.Comentario.Length < 20 || dto.Comentario.Length > 100))
+                ModelState.AddModelError("Comentario", "El comentario debe tener entre 20 y 100 caracteres.");
+
+            // 4. Método de pago (Visa, GooglePay o PayPal) que ya existe en la BD
+            MetodoPago? metodoPago = null;
+            string metodoPagoTexto = dto.MetodoPago?.Trim().ToLower() ?? "";
+            if (metodoPagoTexto == "visa")
+            {
+                metodoPago = await _context.MetodosPago.OfType<Visa>().FirstOrDefaultAsync();
+                metodoPagoTexto = "Visa";
+            }
+            else if (metodoPagoTexto == "googlepay")
+            {
+                metodoPago = await _context.MetodosPago.OfType<GooglePay>().FirstOrDefaultAsync();
+                metodoPagoTexto = "GooglePay";
+            }
+            else if (metodoPagoTexto == "paypal")
+            {
+                metodoPago = await _context.MetodosPago.OfType<PayPal>().FirstOrDefaultAsync();
+                metodoPagoTexto = "PayPal";
+            }
+
+            if (metodoPago == null)
+                ModelState.AddModelError("MetodoPago", "El método de pago debe ser Visa, GooglePay o PayPal.");
+
+            if (ModelState.ErrorCount > 0)
+            {
+                _logger.LogError($"{DateTime.Now} Error: Datos no válidos al crear la reposición.");
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            // 5. Guardamos en el usuario los datos del formulario
+            user!.Name = dto.Nombre;
+            user.Surname = dto.Apellidos;
+            user.PhoneNumber = dto.Telefono;
+
+            // 6. Creamos la reposición
+            var reposicion = new Reposicion
+            {
+                FechaReposicion = DateTime.Now,
+                Comentario = dto.Comentario,
+                ApplicationUserId = user.Id,
+                Usuario = user,
+                MetodoPagoId = metodoPago!.Id,
+                MetodoPago = metodoPago,
+                ReposicionItems = new List<ReposicionItem>()
+            };
+
+            var librosRepuestos = new List<ReposicionItemDTO>();
+            double precioTotal = 0;
+
+            // 7. Recorremos cada libro del carrito
+            foreach (var item in dto.Libros)
+            {
+                var libro = await _context.Libros.FirstOrDefaultAsync(l => l.Id == item.LibroId);
+
+                if (libro == null)
+                    ModelState.AddModelError("Libros", $"El libro con id {item.LibroId} no existe.");
+                else if (item.Cantidad <= 1)
+                    ModelState.AddModelError("Libros", $"La cantidad de '{libro.Titulo}' debe ser mayor que 1.");
+                else if (reposicion.ReposicionItems.Any(ri => ri.LibroId == libro.Id))
+                    ModelState.AddModelError("Libros", $"El libro '{libro.Titulo}' está repetido.");
+                else
+                {
+                    reposicion.ReposicionItems.Add(new ReposicionItem
+                    {
+                        LibroId = libro.Id,
+                        Libro = libro,
+                        Cantidad = item.Cantidad,
+                        Reposicion = reposicion
+                    });
+
+                    libro.Stock += item.Cantidad;
+                    precioTotal += (double)libro.PrecioReposicion * item.Cantidad;
+
+                    librosRepuestos.Add(new ReposicionItemDTO(libro.Id, libro.Titulo, libro.Autor, item.Cantidad));
+                }
+            }
+
+            if (ModelState.ErrorCount > 0)
+            {
+                _logger.LogError($"{DateTime.Now} Error: Libros no válidos al crear la reposición.");
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            reposicion.PrecioTotal = precioTotal;
+
+            // 8. Guardamos en la base de datos
+            _context.Reposiciones.Add(reposicion);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{DateTime.Now} Error al guardar la reposición.");
+                return Conflict("Error al guardar la reposición: " + ex.Message);
+            }
+
+            // 9. Recibo
+            var resultado = new ReposicionDetailDTO(
+                reposicion.Id,
+                user.Name ?? "",
+                user.Surname ?? "",
+                user.PhoneNumber ?? "",
+                reposicion.FechaReposicion,
+                reposicion.PrecioTotal,
+                metodoPagoTexto,
+                reposicion.Comentario,
+                librosRepuestos);
+
+            return CreatedAtAction(nameof(GetDetailsForReposicion), new { id = reposicion.Id }, resultado);
         }
-    }
-
-    // 3. Validar comentario opcional (20-100 caracteres) (Paso 5)
-    if (!string.IsNullOrWhiteSpace(dto.Comentario))
-    {
-        if (dto.Comentario.Length < 20 || dto.Comentario.Length > 100)
-        {
-            ModelState.AddModelError("Comentario", "El comentario debe tener entre 20 y 100 caracteres.");
-            _logger.LogError($"{DateTime.Now} Error: Longitud de comentario no válida ({dto.Comentario.Length} caracteres).");
-        }
-    }
-
-    // 4. Validar método de pago (Visa, GooglePay o PayPal) (Paso 5)
-    var metodosValidos = new[] { "Visa", "GooglePay", "PayPal" };
-    if (string.IsNullOrWhiteSpace(dto.MetodoPago) || !metodosValidos.Contains(dto.MetodoPago, StringComparer.OrdinalIgnoreCase))
-    {
-        ModelState.AddModelError("MetodoPago", "El método de pago debe ser Visa, GooglePay o PayPal.");
-        _logger.LogError($"{DateTime.Now} Error: Método de pago no válido ({dto.MetodoPago}).");
-    }
-
-    if (!ModelState.IsValid)
-    {
-        return BadRequest(new ValidationProblemDetails(ModelState));
-    }
-
-    // 5. Verificar que los libros existen en la BD
-    var idsLibros = dto.Libros.Select(l => l.LibroId).ToList();
-    var librosEnBD = await _context.Libros
-        .Where(l => idsLibros.Contains(l.Id))
-        .ToDictionaryAsync(l => l.Id);
-
-    if (librosEnBD.Count != idsLibros.Distinct().Count())
-    {
-        ModelState.AddModelError("Libros", "Uno o más libros seleccionados no existen.");
-        _logger.LogError($"{DateTime.Now} Error: Uno o más libros seleccionados no existen.");
-        return BadRequest(new ValidationProblemDetails(ModelState));
-    }
-
-    // 6. Obtener método de pago
-    var metodoPagoEntidad = await _context.MetodosPago
-        .FirstOrDefaultAsync(m => m.GetType().Name.ToLower() == dto.MetodoPago.ToLower());
-
-    // 7. Crear entidad Reposicion y calcular precio total
-    double precioTotal = 0;
-    var nuevaReposicion = new Reposicion
-    {
-        FechaReposicion = DateTime.Now,
-        Comentario = dto.Comentario,
-        MetodoPago = metodoPagoEntidad,
-        ReposicionItems = new List<ReposicionItem>()
-    };
-
-    foreach (var item in dto.Libros)
-    {
-        var libro = librosEnBD[item.LibroId];
-        precioTotal += (double)libro.PrecioReposicion * item.Cantidad;
-
-        nuevaReposicion.ReposicionItems.Add(new ReposicionItem
-        {
-            LibroId = libro.Id,
-            Cantidad = item.Cantidad
-        });
-    }
-
-    nuevaReposicion.PrecioTotal = precioTotal;
-
-    // 8. Guardar en Base de Datos
-    _context.Reposiciones.Add(nuevaReposicion);
-    await _context.SaveChangesAsync();
-
-    // 9. Construir respuesta (Recibo)
-    var resultDTO = new ReposicionDetailDTO(
-        nuevaReposicion.Id,
-        dto.Nombre,
-        $"{dto.PrimerApellido} {dto.SegundoApellido}".Trim(),
-        dto.Telefono,
-        nuevaReposicion.FechaReposicion,
-        nuevaReposicion.PrecioTotal,
-        dto.MetodoPago,
-        nuevaReposicion.Comentario,
-        nuevaReposicion.ReposicionItems.Select(ri => new ReposicionItemDTO(
-            ri.LibroId,
-            librosEnBD[ri.LibroId].Titulo,
-            librosEnBD[ri.LibroId].Autor,
-            ri.Cantidad
-        )).ToList()
-    );
-
-    return CreatedAtAction(nameof(GetDetailsForReposicion), new { id = nuevaReposicion.Id }, resultDTO);
-}
 
     }
 }

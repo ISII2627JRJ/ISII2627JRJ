@@ -5,14 +5,14 @@ namespace AppForSEII.API.DTOs
 {
     public class ReposicionForCreateDTO
     {
+        [Required(ErrorMessage = "El usuario es obligatorio.")]
+        public string UserName { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "El nombre del usuario es obligatorio.")]
         public string Nombre { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El primer apellido es obligatorio.")]
-        public string PrimerApellido { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "El segundo apellido es obligatorio.")]
-        public string SegundoApellido { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Los apellidos son obligatorios.")]
+        public string Apellidos { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El teléfono es obligatorio.")]
         public string Telefono { get; set; } = string.Empty;
