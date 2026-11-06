@@ -118,16 +118,11 @@ namespace AppForSEII.API.Controllers
             user.PhoneNumber = dto.Telefono;
 
             // 6. Creamos la reposición
-            var reposicion = new Reposicion
-            {
-                FechaReposicion = DateTime.Now,
-                Comentario = dto.Comentario,
-                ApplicationUserId = user.Id,
-                Usuario = user,
-                MetodoPagoId = metodoPago!.Id,
-                MetodoPago = metodoPago,
-                ReposicionItems = new List<ReposicionItem>()
-            };
+            var reposicion = new Reposicion(0, DateTime.Now, 0, dto.Comentario!);
+            reposicion.ApplicationUserId = user.Id;
+            reposicion.Usuario = user;
+            reposicion.MetodoPagoId = metodoPago!.Id;
+            reposicion.MetodoPago = metodoPago;
 
             var librosRepuestos = new List<ReposicionItemDTO>();
             double precioTotal = 0;
@@ -145,13 +140,7 @@ namespace AppForSEII.API.Controllers
                     ModelState.AddModelError("Libros", $"El libro '{libro.Titulo}' está repetido.");
                 else
                 {
-                    reposicion.ReposicionItems.Add(new ReposicionItem
-                    {
-                        LibroId = libro.Id,
-                        Libro = libro,
-                        Cantidad = item.Cantidad,
-                        Reposicion = reposicion
-                    });
+                    reposicion.ReposicionItems.Add(new ReposicionItem(0, item.Cantidad, libro.Id, reposicion.Id));
 
                     libro.Stock += item.Cantidad;
                     precioTotal += (double)libro.PrecioReposicion * item.Cantidad;

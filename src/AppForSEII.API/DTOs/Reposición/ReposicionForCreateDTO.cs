@@ -25,6 +25,20 @@ namespace AppForSEII.API.DTOs
 
         [Required(ErrorMessage = "Debe incluir al menos un libro a reponer.")]
         public List<ItemDTO> Libros { get; set; } = new List<ItemDTO>();
+        
+        public ReposicionForCreateDTO() { }
+
+        public ReposicionForCreateDTO(string userName, string nombre, string apellidos, string telefono,
+            string metodoPago, string? comentario, List<ItemDTO> libros)
+        {
+            UserName = userName;
+            Nombre = nombre;
+            Apellidos = apellidos;
+            Telefono = telefono;
+            MetodoPago = metodoPago;
+            Comentario = comentario;
+            Libros = libros;
+        }
 
         // Clase interna anidada para no crear un segundo archivo ni un segundo DTO global
         public class ItemDTO
@@ -34,6 +48,14 @@ namespace AppForSEII.API.DTOs
 
             [Range(2, int.MaxValue, ErrorMessage = "La cantidad a reponer debe ser mayor que 1.")]
             public int Cantidad { get; set; }
+            
+            public ItemDTO() { }
+
+            public ItemDTO(int libroId, int cantidad)
+            {
+                LibroId = libroId;
+                Cantidad = cantidad;
+            }
         }
     }
 }

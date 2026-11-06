@@ -31,9 +31,8 @@ namespace AppForSEII.UT.ReposicionesController_test
             reposicion.Usuario = admin;
             reposicion.MetodoPagoId = visa.Id;
             reposicion.MetodoPago = visa;
-            reposicion.ReposicionItems.Add(new ReposicionItem { Cantidad = 2, LibroId = resplandor.Id, Libro = resplandor, Reposicion = reposicion });
-            reposicion.ReposicionItems.Add(new ReposicionItem { Cantidad = 3, LibroId = it.Id, Libro = it, Reposicion = reposicion });
-
+            reposicion.ReposicionItems.Add(new ReposicionItem(0, 2, resplandor.Id, reposicion.Id));
+            reposicion.ReposicionItems.Add(new ReposicionItem(0, 3, it.Id, reposicion.Id));
             _context.Add(reposicion);
             _context.SaveChanges();
         }
