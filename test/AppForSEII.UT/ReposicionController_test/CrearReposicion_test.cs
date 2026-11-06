@@ -34,23 +34,13 @@ namespace AppForSEII.UT.ReposicionesController_test
         private static ReposicionForCreateDTO CrearDTO(string userName, string metodoPago, string? comentario,
             List<ReposicionForCreateDTO.ItemDTO> libros)
         {
-            return new ReposicionForCreateDTO
-            {
-                UserName = userName,
-                Nombre = "Elena",
-                Apellidos = "Navarro Martínez",
-                Telefono = "678371248",
-                MetodoPago = metodoPago,
-                Comentario = comentario,
-                Libros = libros
-            };
+            return new ReposicionForCreateDTO(userName, "Elena", "Navarro Martínez", "678371248", metodoPago, comentario, libros);
         }
 
         private static ReposicionForCreateDTO.ItemDTO Item(int libroId, int cantidad)
         {
-            return new ReposicionForCreateDTO.ItemDTO { LibroId = libroId, Cantidad = cantidad };
+            return new ReposicionForCreateDTO.ItemDTO(libroId, cantidad);
         }
-
         // Casos de error: (reposición que enviamos, mensaje de error esperado)
         public static IEnumerable<object[]> TestCasesFor_CrearReposicion()
         {
