@@ -36,13 +36,14 @@ namespace AppForSEII.API.Controllers
                 return NotFound($"No se encontró la reseña con el ID {id}.");
             }
 
+            var usuario = resena.ApplicationUser!;
 
             var resenaDetailDTO = new ResenaDetailDTO(
             id: resena.Id,
             tituloResena: resena.TituloResena,
-            nombreCliente: resena.ApplicationUser?.Name ?? string.Empty,
-            apellidosCliente: resena.ApplicationUser?.Surname ?? string.Empty,
-            telefonoCliente: resena.ApplicationUser?.PhoneNumber ?? string.Empty,
+            nombreCliente: usuario.Name,
+            apellidosCliente: usuario.Surname,
+            telefonoCliente: usuario.PhoneNumber,
             fecha: resena.Fecha,
             items: resena.ResenaItems.Select(i => new ResenaItemDTO(
             libroId: i.LibroId,
@@ -229,9 +230,9 @@ namespace AppForSEII.API.Controllers
             var detalle = new ResenaDetailDTO(
                 id: resena.Id,
                 tituloResena: resena.TituloResena,
-                nombreCliente: usuario.Name ?? string.Empty,
-                apellidosCliente: usuario.Surname ?? string.Empty,
-                telefonoCliente: usuario.PhoneNumber ?? string.Empty,
+                nombreCliente: usuario.Name,
+                apellidosCliente: usuario.Surname,
+                telefonoCliente: usuario.PhoneNumber,
                 fecha: resena.Fecha,
                 items: resena.ResenaItems.Select(item =>
                 {
