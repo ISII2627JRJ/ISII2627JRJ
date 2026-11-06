@@ -46,8 +46,19 @@ namespace AppForSEII.UT
             var todosLosLibros =
                 Assert.IsType<List<LibroParaResenarDTO>>(okSinFiltros.Value);
 
-            Assert.Equal(3, todosLosLibros.Count);
-            Assert.Contains(todosLosLibros, libro => libro.Id == 3);
+            var librosEsperados = new List<LibroParaResenarDTO>
+            {
+             new(1, "Dune", "Tapa blanda", "Ciencia ficción",
+             "Minotauro", "Frank Herbert", 4.5, new DateTime(1965, 8, 1)),
+
+             new(3, "El Hobbit", "Tapa blanda", "Fantasía",
+             "Minotauro", "J. R. R. Tolkien", 4.7, new DateTime(1937, 9, 21)),
+
+             new(2, "Fundación", "Tapa dura premium", "Ciencia ficción",
+              "Nova", "Isaac Asimov", 4.6, new DateTime(1951, 1, 1))
+            };
+
+            Assert.Equal(librosEsperados, todosLosLibros);
 
             var resultadoFiltrado =
                 await controller.GetLibrosParaResenar(
@@ -60,9 +71,9 @@ namespace AppForSEII.UT
             var librosFiltrados =
                 Assert.IsType<List<LibroParaResenarDTO>>(okFiltrado.Value);
 
-            var libroEncontrado = Assert.Single(librosFiltrados);
-            Assert.Equal(1, libroEncontrado.Id);
-            Assert.Equal("Dune", libroEncontrado.Titulo);
+            Assert.Equal(
+            new List<LibroParaResenarDTO> { librosEsperados[0] },
+            librosFiltrados);
         }
 
         [Fact]
