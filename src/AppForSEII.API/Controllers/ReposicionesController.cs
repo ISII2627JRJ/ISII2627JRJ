@@ -183,9 +183,9 @@ namespace AppForSEII.API.Controllers
             // 9. Recibo
             var resultado = new ReposicionDetailDTO(
                 reposicion.Id,
-                user.Name ?? "",
-                user.Surname ?? "",
-                user.PhoneNumber ?? "",
+                dto.Nombre,
+                dto.Apellidos,
+                dto.Telefono,
                 reposicion.FechaReposicion,
                 reposicion.PrecioTotal,
                 metodoPagoTexto,

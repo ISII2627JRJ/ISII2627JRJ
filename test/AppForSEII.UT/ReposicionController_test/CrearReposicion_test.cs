@@ -81,6 +81,9 @@ namespace AppForSEII.UT.ReposicionesController_test
 
             var libroRepetido = CrearDTO("elena@uclm.es", "Visa", null,
                 new List<ReposicionForCreateDTO.ItemDTO>() { Item(1, 2), Item(1, 3) });
+            var metodoPagoNulo = CrearDTO("elena@uclm.es", "Visa", null,
+                new List<ReposicionForCreateDTO.ItemDTO>() { Item(1, 2) });
+            metodoPagoNulo.MetodoPago = null!;
 
             var allTests = new List<object[]>
             {
@@ -92,8 +95,8 @@ namespace AppForSEII.UT.ReposicionesController_test
                 new object[] { metodoPagoMal, "El método de pago debe ser Visa, GooglePay o PayPal." },
                 new object[] { libroNoExiste, "El libro con id 99 no existe." },
                 new object[] { cantidadUno, "La cantidad de 'El Resplandor' debe ser mayor que 1." },
-                new object[] { libroRepetido, "El libro 'El Resplandor' está repetido." }
-            };
+                new object[] { libroRepetido, "El libro 'El Resplandor' está repetido." },
+                new object[] { metodoPagoNulo, "El método de pago debe ser Visa, GooglePay o PayPal." }            };
             return allTests;
         }
 
