@@ -62,6 +62,7 @@ namespace AppForSEII.API.Controllers
         [Route("CreateResena")]
         [ProducesResponseType(typeof(ResenaDetailDTO), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> CreateResena(
     [FromBody] ResenaForCreateDTO resenaDTO)
         {
@@ -212,8 +213,18 @@ namespace AppForSEII.API.Controllers
                 });
             }
 
-            _context.Resenas.Add(resena);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Resenas.Add(resena);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Problem(
+                    statusCode: (int)HttpStatusCode.InternalServerError,
+                    title: "No se pudo guardar la reseña.",
+                    detail: "Se produjo un error al guardar la reseña en la base de datos.");
+            }
 
             var detalle = new ResenaDetailDTO(
                 id: resena.Id,

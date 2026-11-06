@@ -92,23 +92,33 @@ namespace AppForSEII.UT
 
             // Usuario inexistente
             await AssertBadRequestAsync(
-                CrearSolicitud(userId: "usuario-inexistente"));
+                CrearSolicitud(
+                    userId: "usuario-inexistente",
+                    items: new ResenaItemForCreateDTO(1, 5, null)));
 
             // Perfil incompleto: falta el nombre
             await AssertBadRequestAsync(
-                CrearSolicitud(userId: "sin-nombre"));
+                CrearSolicitud(
+                    userId: "sin-nombre",
+                    items: new ResenaItemForCreateDTO(1, 5, null)));
 
             // Perfil incompleto: faltan los apellidos
             await AssertBadRequestAsync(
-                CrearSolicitud(userId: "sin-apellidos"));
+                CrearSolicitud(
+                    userId: "sin-apellidos",
+                    items: new ResenaItemForCreateDTO(1, 5, null)));
 
             // Perfil incompleto: falta la dirección
             await AssertBadRequestAsync(
-                CrearSolicitud(userId: "sin-direccion"));
+                CrearSolicitud(
+                    userId: "sin-direccion",
+                    items: new ResenaItemForCreateDTO(1, 5, null)   ));
 
             // Perfil incompleto: falta el teléfono
             await AssertBadRequestAsync(
-                CrearSolicitud(userId: "sin-telefono"));
+                CrearSolicitud(
+                    userId: "sin-telefono",
+                    items: new ResenaItemForCreateDTO(1, 5, null)));
 
             // No se puede repetir un libro en la misma reseña
             await AssertBadRequestAsync(
