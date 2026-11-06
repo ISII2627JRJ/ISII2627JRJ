@@ -108,21 +108,26 @@ namespace AppForSEII.UT
 
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var dto = Assert.IsType<ResenaDetailDTO>(okResult.Value);
-            var dtoItem = Assert.Single(dto.Items);
 
-            Assert.Equal(resena.Id, dto.Id);
-            Assert.Equal("Una buena obra", dto.TituloResena);
-            Assert.Equal("Ana", dto.NombreCliente);
-            Assert.Equal("Pérez", dto.ApellidosCliente);
-            Assert.Equal("600123456", dto.TelefonoCliente);
-            Assert.Equal(new DateTime(2026, 11, 1), dto.Fecha);
+            var dtoEsperado = new ResenaDetailDTO(
+             id: resena.Id,
+            tituloResena: "Una buena obra",
+            nombreCliente: "Ana",
+            apellidosCliente: "Pérez",
+            telefonoCliente: "600123456",
+            fecha: new DateTime(2026, 11, 1),
+            items: new List<ResenaItemDTO>
+            {
+        new(
+            libroId: libro.Id,
+            tituloLibro: "Dune",
+            tipoLibro: "Tapa blanda",
+            editorial: "Minotauro",
+            puntuacion: 5,
+            comentario: descripcion)
+     });
 
-            Assert.Equal(libro.Id, dtoItem.LibroId);
-            Assert.Equal("Dune", dtoItem.TituloLibro);
-            Assert.Equal("Tapa blanda", dtoItem.TipoLibro);
-            Assert.Equal("Minotauro", dtoItem.Editorial);
-            Assert.Equal(5, dtoItem.Puntuacion);
-            Assert.Equal(descripcion, dtoItem.Comentario);
+            Assert.Equal(dtoEsperado, dto);
         }
 
         public void Dispose()

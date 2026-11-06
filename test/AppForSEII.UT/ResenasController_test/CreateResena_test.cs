@@ -112,7 +112,7 @@ namespace AppForSEII.UT
             await AssertBadRequestAsync(
                 CrearSolicitud(
                     userId: "sin-direccion",
-                    items: new ResenaItemForCreateDTO(1, 5, null)   ));
+                    items: new ResenaItemForCreateDTO(1, 5, null)));
 
             // Perfil incompleto: falta el teléfono
             await AssertBadRequestAsync(
@@ -155,19 +155,26 @@ namespace AppForSEII.UT
                 created.ActionName);
 
             var dto = Assert.IsType<ResenaDetailDTO>(created.Value);
-            var itemDTO = Assert.Single(dto.Items);
+            
+            var dtoEsperado = new ResenaDetailDTO(
+            id: dto.Id,
+            tituloResena: "Reseña excelente",
+            nombreCliente: "Ana",
+            apellidosCliente: "Pérez",
+            telefonoCliente: "600123456",
+            fecha: dto.Fecha,
+            items: new List<ResenaItemDTO>
+            {
+        new(
+            libroId: 1,
+            tituloLibro: "Dune",
+            tipoLibro: "Tapa blanda",
+            editorial: "Minotauro",
+            puntuacion: 5,
+            comentario: comentario)
+     });
 
-            Assert.Equal("Reseña excelente", dto.TituloResena);
-            Assert.Equal("Ana", dto.NombreCliente);
-            Assert.Equal("Pérez", dto.ApellidosCliente);
-            Assert.Equal("600123456", dto.TelefonoCliente);
-
-            Assert.Equal(1, itemDTO.LibroId);
-            Assert.Equal("Dune", itemDTO.TituloLibro);
-            Assert.Equal("Tapa blanda", itemDTO.TipoLibro);
-            Assert.Equal("Minotauro", itemDTO.Editorial);
-            Assert.Equal(5, itemDTO.Puntuacion);
-            Assert.Equal(comentario, itemDTO.Comentario);
+            Assert.Equal(dtoEsperado, dto);
 
             var resenaGuardada = await _context.Resenas
                 .Include(r => r.ResenaItems)

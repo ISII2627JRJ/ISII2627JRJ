@@ -196,23 +196,27 @@ namespace AppForSEII.API.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            var resena = new Resena
+            var resena = new Resena(
+     id: 0,
+     fecha: DateTime.Now,
+     applicationUserId: resenaDTO.ApplicationUserId)
             {
-                ApplicationUserId = resenaDTO.ApplicationUserId,
-                TituloResena = resenaDTO.TituloResena,
-                Fecha = DateTime.Now,
-                ResenaItems = new List<ResenaItem>()
+                TituloResena = resenaDTO.TituloResena
             };
 
             foreach (var itemDTO in items)
             {
-                resena.ResenaItems.Add(new ResenaItem
-                {
-                    LibroId = itemDTO.LibroId,
-                    Calificacion = itemDTO.Calificacion,
-                    Descripcion = itemDTO.Descripcion
-                });
+                resena.ResenaItems.Add(
+                    new ResenaItem(
+                        libroId: itemDTO.LibroId,
+                        resenaId: resena.Id,
+                        descripcion: itemDTO.Descripcion,
+                        calificacion: itemDTO.Calificacion)
+                    {
+                        Resena = resena
+                    });
             }
+
 
             try
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AppForSEII.API.DTOs
 {
@@ -30,6 +31,29 @@ namespace AppForSEII.API.DTOs
             TelefonoCliente = telefonoCliente;
             Fecha = fecha;
             Items = items;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ResenaDetailDTO other &&
+                   Id == other.Id &&
+                   TituloResena == other.TituloResena &&
+                   NombreCliente == other.NombreCliente &&
+                   ApellidosCliente == other.ApellidosCliente &&
+                   TelefonoCliente == other.TelefonoCliente &&
+                   Fecha == other.Fecha &&
+                   Items.SequenceEqual(other.Items);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(
+                Id,
+                TituloResena,
+                NombreCliente,
+                ApellidosCliente,
+                TelefonoCliente,
+                Fecha);
         }
     }
 }
