@@ -47,7 +47,13 @@ namespace AppForSEII.UT
 
             // Título demasiado largo
             await AssertBadRequestAsync(
-                CrearSolicitud(titulo: "Este título es demasiado largo"));
+                CrearSolicitud(titulo: "Este título es demasiado largo")
+                );
+
+            //NUEVO: Titulo no empieza por Reseña:
+            await AssertBadRequestAsync(
+                CrearSolicitud(titulo: "El libro me gusta")
+                );
 
             // Lista de libros vacía
             await AssertBadRequestAsync(
@@ -158,7 +164,7 @@ namespace AppForSEII.UT
             
             var dtoEsperado = new ResenaDetailDTO(
             id: dto.Id,
-            tituloResena: "Reseña excelente",
+            tituloResena: "Reseña: me gusta",
             nombreCliente: "Ana",
             apellidosCliente: "Pérez",
             telefonoCliente: "600123456",
@@ -180,7 +186,7 @@ namespace AppForSEII.UT
                 .Include(r => r.ResenaItems)
                 .SingleAsync();
 
-            Assert.Equal("Reseña excelente", resenaGuardada.TituloResena);
+            Assert.Equal("Reseña: me gusta", resenaGuardada.TituloResena);
             Assert.Equal("usuario-valido", resenaGuardada.ApplicationUserId);
             Assert.Single(resenaGuardada.ResenaItems);
             Assert.Equal(1, resenaGuardada.ResenaItems[0].LibroId);
@@ -198,7 +204,7 @@ namespace AppForSEII.UT
 
         private static ResenaForCreateDTO CrearSolicitud(
             string userId = "usuario-valido",
-            string titulo = "Reseña excelente",
+            string titulo = "Reseña: me gusta",
             params ResenaItemForCreateDTO[] items)
         {
             return new ResenaForCreateDTO
