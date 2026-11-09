@@ -77,6 +77,10 @@ namespace AppForSEII.API.Controllers
             if (user == null)
                 ModelState.AddModelError("CustomerUserName", "Error! El usuario no está registrado.");
 
+         if (!compraForCreate.Direccion.Contains("Calle"))
+                ModelState.AddModelError("CompraItems", "Error! La direccion debe incluir la palabra calle.");
+
+
             // 3. Buscamos el método de pago que ya existe en la BD (1=Visa, 2=GooglePay, 3=PayPal)
             MetodoPago metodoPago = null;
             string metodoPagoTexto = "";
