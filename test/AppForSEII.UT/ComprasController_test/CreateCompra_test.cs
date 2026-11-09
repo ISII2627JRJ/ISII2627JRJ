@@ -57,6 +57,8 @@ namespace AppForSEII.UT.ComprasController_test
             var libroRepetido = new CompraForCreateDTO("peter@uclm.es", "Peter", "Jackson", "Calle Mayor 2", "678371249", 1, null,
                 new List<CompraItemDTO>() { new CompraItemDTO(1, "", "", "", 0, 2), new CompraItemDTO(1, "", "", "", 0, 2) });
 
+          var direccionMal = new CompraForCreateDTO("peter@uclm.es", "Peter", "Jackson", "C/Mayor 2", "678371249", 1, null,
+                new List<CompraItemDTO>() { new CompraItemDTO(1, "", "", "", 0, 2) });
             var allTests = new List<object[]>
             {
                 new object[] { sinLibros, "Error! Debes incluir al menos un libro para comprar." },
@@ -66,7 +68,9 @@ namespace AppForSEII.UT.ComprasController_test
                 new object[] { libroNoExiste, "Error! El libro con id 99 no existe." },
                 new object[] { cantidadUno, "Error! La cantidad de 'El Señor de los Anillos' debe ser mayor que 1." },
                 new object[] { sinStock, "Error! El libro 'El Señor de los Anillos' no tiene stock suficiente." },
-                new object[] { libroRepetido, "Error! El libro 'El Señor de los Anillos' está repetido." }
+                new object[] { libroRepetido, "Error! El libro 'El Señor de los Anillos' está repetido." },
+                new object[] { direccionMal, "Error! La direccion debe incluir la palabra calle." }
+
             };
             return allTests;
         }
