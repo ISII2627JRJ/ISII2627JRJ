@@ -91,6 +91,14 @@ namespace AppForSEII.API.Controllers
                     "El título debe tener entre 10 y 20 caracteres.");
             }
 
+            if (!resenaDTO.TituloResena.StartsWith("Reseña:"))
+            {
+                ModelState.AddModelError(
+                    "TituloResena",
+                    "El título debe empezar por Reseña.");
+            }
+
+
             if (items.Count == 0)
             {
                 ModelState.AddModelError(
