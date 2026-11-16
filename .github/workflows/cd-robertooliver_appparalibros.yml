@@ -1,0 +1,80 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy ASP.Net Core app to Azure Web App - AppParaLibros
+
+on:
+  push:
+    branches:
+      - 'CD-RobertoOliver'
+  workflow_dispatch:
+
+jobs:
+  
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore API dependencies
+        run: dotnet restore src/AppForSEII.API/AppForSEII.API.csproj
+
+      - name: Restore UT dependencies
+        run: dotnet restore test/AppForSEII.UT/AppForSEII.UT.csproj
+
+      - name: Build API
+        run: dotnet build src/AppForSEII.API/AppForSEII.API.csproj --configuration Release --no-restore
+
+      - name: Build UT
+        run: dotnet build test/AppForSEII.UT/AppForSEII.UT.csproj --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test test/AppForSEII.UT/AppForSEII.UT.csproj --configuration Release --no-build --logger "trx;LogFileName=TestResults.trx"
+
+      - name: Publish API
+        run: dotnet publish src/AppForSEII.API/AppForSEII.API.csproj --configuration Release --no-build -o "${{ runner.temp }}/myapp"
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: ${{ runner.temp }}/myapp
+
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: .net-app
+      
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D4CAC349436747EC8B366FF07FB28513 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8128B35B3CBD4084856A400CCFC95186 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_39EB7ACC3E0E472C849027F34CD4CD85 }}
+
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'AppParaLibros'
+          slot-name: 'Production'
+          package: .
+          
