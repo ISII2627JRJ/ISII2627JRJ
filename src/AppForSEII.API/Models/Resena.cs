@@ -5,11 +5,25 @@ namespace AppForSEII.API.Models
 {
     public class Resena
     {
+        public Resena()
+        {
+        }
+
+        public Resena(int id, string tituloResena, DateTime fecha, ApplicationUser applicationUser, IList<ResenaItem> resenaItems)
+        {
+            Id = id;
+            TituloResena = tituloResena;
+            Fecha = fecha;
+            ApplicationUser = applicationUser;
+            ApplicationUserId = applicationUser.Id;
+            ResenaItems = resenaItems;
+        }
+
         [Key]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "La fecha es obligatoria")]
-        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
+        [DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
         public DateTime Fecha { get; set; }
 
         [Required]
@@ -17,27 +31,25 @@ namespace AppForSEII.API.Models
         public string TituloResena { get; set; } = string.Empty;
 
         [Required]
-        public string ApplicationUserId { get; set; }
+        public string ApplicationUserId { get; set; } = string.Empty;
 
         [ForeignKey("ApplicationUserId")]
-        public virtual ApplicationUser? ApplicationUser { get; set; }
+        public ApplicationUser ApplicationUser { get; set; } = null!;
 
-        public virtual IList<ResenaItem> ResenaItems { get; set; }
+        public IList<ResenaItem> ResenaItems { get; set; } = new List<ResenaItem>();
 
-        // Constructor vacío
-        public Resena()
+        public override bool Equals(object? obj)
         {
-            ResenaItems = new List<ResenaItem>();
-            ApplicationUserId = string.Empty;
+            return obj is Resena resena &&
+                   Id == resena.Id &&
+                   Fecha == resena.Fecha &&
+                   TituloResena == resena.TituloResena &&
+                   ApplicationUserId == resena.ApplicationUserId;
         }
 
-        // Constructor con parámetros
-        public Resena(int id, DateTime fecha, string applicationUserId)
+        public override int GetHashCode()
         {
-            Id = id;
-            Fecha = fecha;
-            ApplicationUserId = applicationUserId;
-            ResenaItems = new List<ResenaItem>();
+            return HashCode.Combine(Id, Fecha, TituloResena, ApplicationUserId);
         }
     }
 }

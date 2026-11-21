@@ -19,5 +19,17 @@ namespace AppForSEII.API.Models
 
         [Required]
         public string Nombre { get; set; }
+
+                public override bool Equals(object? obj)
+        {
+            return obj is Genero genero &&
+                   Id == genero.Id &&
+                   Nombre == genero.Nombre;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, Nombre);
+        }
     }
 }

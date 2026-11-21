@@ -1,290 +1,157 @@
 using AppForSEII.API.Controllers;
-using AppForSEII.API.Data;
 using AppForSEII.API.DTOs;
-using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 
-namespace AppForSEII.UT
+namespace AppForSEII.UT.ResenasController_test
 {
-    public class CreateResena_test : IDisposable
+    public class CreateResena_test : AppForSEII4SqliteUT
     {
-        private readonly SqliteConnection _connection;
-        private readonly ApplicationDbContext _context;
+        private const string _userName = "ana@uclm.es";
+        private const string _nombre = "Ana";
+        private const string _apellidos = "Pérez López";
+        private const string _direccion = "Calle Mayor 1, Albacete";
+        private const string _telefono = "600123456";
+        private const string _tituloResena = "Reseña: me gusta";
 
-        public CreateResena_test()
+        private const string _libro1Titulo = "Dune";
+        private const string _libro2Titulo = "El Hobbit";
+        private const string _tipoLibro = "Tapa blanda";
+        private const string _editorial = "Minotauro";
+
+                public CreateResena_test()
         {
-            _connection = new SqliteConnection("Filename=:memory:");
-            _connection.Open();
+            var generos = new List<Genero>() {
+                new Genero(0, "Ciencia ficción"),
+                new Genero(0, "Fantasía"),
+            };
 
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlite(_connection)
-                .Options;
+            var editoriales = new List<Editorial>() {
+                new Editorial(0, _editorial),
+            };
 
-            _context = new ApplicationDbContext(options);
-            _context.Database.EnsureCreated();
+            var libros = new List<Libro>() {
+                new Libro(0, _libro1Titulo, "Frank Herbert", new DateTime(1965, 1, 1), 20m, 10m, 5, _tipoLibro, 4.5, generos[0], editoriales[0]),
+                new Libro(0, _libro2Titulo, "J. R. R. Tolkien", new DateTime(1937, 9, 21), 15m, 7m, 3, _tipoLibro, 4.7, generos[1], editoriales[0]),
+            };
+
+            ApplicationUser user = new ApplicationUser("1", "Ana", "Pérez", _userName, "Calle Antigua 5");
+            user.PhoneNumber = "600000000";
+
+            //ya existe una reseña, así que la nueva tendrá Id=2
+            var resena = new Resena(0, "Reseña: buena obra", DateTime.Now, user, new List<ResenaItem>());
+            resena.ResenaItems.Add(new ResenaItem(libros[0], resena, 5, "Una novela de ciencia ficción muy recomendable."));
+
+            _context.ApplicationUsers.Add(user);
+            _context.AddRange(generos);
+            _context.AddRange(editoriales);
+            _context.AddRange(libros);
+            _context.Add(resena);
+            _context.SaveChanges();
+        }
+
+                public static IEnumerable<object[]> TestCasesFor_CreateResena()
+        {
+            var resenaItems = new List<ResenaItemDTO>() { new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 4) };
+
+            var resenaNoItem = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>());
+
+            var resenaItemsNulos = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>());
+            resenaItemsNulos.ResenaItems = null!;
+
+            var resenaTituloSinPrefijo = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                "El libro me gusta", resenaItems);
+
+            var resenaApplicationUser = new ResenaForCreateDTO("noexiste@uclm.es", _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, resenaItems);
+
+            var resenaLibroRepetido = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>() {
+                    new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 4),
+                    new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 5) });
+
+            var resenaLibroNoExiste = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>() { new ResenaItemDTO(99, "No existe", _tipoLibro, _editorial, 4) });
+
+            var resenaCalificacionCero = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>() { new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 0) });
+
+            var resenaCalificacionSeis = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>() { new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 6) });
+
+            var allTests = new List<object[]>
+            {             //entrada para CreateResena - error esperado
+                new object[] { resenaNoItem, "Error! Debes incluir al menos un libro para reseñar" },
+                new object[] { resenaItemsNulos, "Error! Debes incluir al menos un libro para reseñar" },
+                new object[] { resenaTituloSinPrefijo, "Error! El título de la reseña debe empezar por 'Reseña:'" },
+                new object[] { resenaApplicationUser, "Error! El usuario no está registrado" },
+                new object[] { resenaLibroRepetido, "Error! No puedes reseñar el mismo libro más de una vez" },
+                new object[] { resenaLibroNoExiste, "Error! El libro con id 99 no existe" },
+                new object[] { resenaCalificacionCero, "Error! La calificación de 'El Hobbit' debe estar entre 1 y 5" },
+                new object[] { resenaCalificacionSeis, "Error! La calificación de 'El Hobbit' debe estar entre 1 y 5" },
+            };
+
+            return allTests;
+        }
+
+        [Theory]
+        [Trait("LevelTesting", "Unit Testing")]
+        [MemberData(nameof(TestCasesFor_CreateResena))]
+        public async Task CreateResena_Error_test(ResenaForCreateDTO resenaDTO, string errorExpected)
+        {
+            // Arrange
+            var mock = new Mock<ILogger<ResenasController>>();
+            ILogger<ResenasController> logger = mock.Object;
+
+            var controller = new ResenasController(_context, logger);
+
+            // Act
+            var result = await controller.CreateResena(resenaDTO);
+
+            //Assert
+            //comprobamos que la respuesta es BadRequest y obtenemos el error devuelto
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
+
+            var errorActual = problemDetails.Errors.First().Value[0];
+
+            //comprobamos que el error esperado y el obtenido son iguales
+            Assert.Equal(errorExpected, errorActual);
         }
 
         [Fact]
-        public async Task CreateResena_Error_test()
-        {
-            await SeedDatosAsync();
-
-            var controller = new ResenasController(_context);
-
-            // DTO nulo
-            var dtoNulo = await controller.CreateResena(null!);
-            Assert.IsType<BadRequestResult>(dtoNulo);
-
-            // Identificador de usuario vacío
-            await AssertBadRequestAsync(
-                CrearSolicitud(userId: " "));
-
-            // Título demasiado corto
-            await AssertBadRequestAsync(
-                CrearSolicitud(titulo: "Corto"));
-
-            // Título demasiado largo
-            await AssertBadRequestAsync(
-                CrearSolicitud(titulo: "Este título es demasiado largo")
-                );
-
-            //NUEVO: Titulo no empieza por Reseña:
-            await AssertBadRequestAsync(
-                CrearSolicitud(titulo: "El libro me gusta")
-                );
-
-            // Lista de libros vacía
-            await AssertBadRequestAsync(
-                CrearSolicitud(items: Array.Empty<ResenaItemForCreateDTO>()));
-
-            // Lista de libros nula
-            var itemsNulos = CrearSolicitud();
-            itemsNulos.Items = null!;
-            await AssertBadRequestAsync(itemsNulos);
-
-            // Elemento nulo
-            await AssertBadRequestAsync(
-                CrearSolicitud(items: new ResenaItemForCreateDTO[] { null! }));
-
-            // Identificador de libro no válido
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(0, 5, null)));
-
-            // Calificación inferior al rango permitido
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(1, 0, null)));
-
-            // Calificación superior al rango permitido
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(1, 6, null)));
-
-            // Descripción demasiado corta
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(1, 5, "demasiado corto")));
-
-            // Descripción demasiado larga
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(
-                        1,
-                        5,
-                        new string('x', 101))));
-
-            // Usuario inexistente
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    userId: "usuario-inexistente",
-                    items: new ResenaItemForCreateDTO(1, 5, null)));
-
-            // Perfil incompleto: falta el nombre
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    userId: "sin-nombre",
-                    items: new ResenaItemForCreateDTO(1, 5, null)));
-
-            // Perfil incompleto: faltan los apellidos
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    userId: "sin-apellidos",
-                    items: new ResenaItemForCreateDTO(1, 5, null)));
-
-            // Perfil incompleto: falta la dirección
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    userId: "sin-direccion",
-                    items: new ResenaItemForCreateDTO(1, 5, null)));
-
-            // Perfil incompleto: falta el teléfono
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    userId: "sin-telefono",
-                    items: new ResenaItemForCreateDTO(1, 5, null)));
-
-            // No se puede repetir un libro en la misma reseña
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO[]
-                    {
-                        new(1, 5, null),
-                        new(1, 4, null)
-                    }));
-
-            // El libro indicado no existe
-            await AssertBadRequestAsync(
-                CrearSolicitud(
-                    items: new ResenaItemForCreateDTO(999, 5, null)));
-        }
-
-        [Fact]
+        [Trait("LevelTesting", "Unit Testing")]
         public async Task CreateResena_Success_test()
         {
-            await SeedDatosAsync();
+            // Arrange
+            var mock = new Mock<ILogger<ResenasController>>();
+            ILogger<ResenasController> logger = mock.Object;
 
-            const string comentario =
-                "Una historia muy recomendable para todos.";
+            var controller = new ResenasController(_context, logger);
 
-            var solicitud = CrearSolicitud(
-                items: new ResenaItemForCreateDTO(1, 5, comentario));
+            var resenaDTO = new ResenaForCreateDTO(_userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>()
+                { new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 4, "Una aventura preciosa para leer en familia.") });
 
-            var controller = new ResenasController(_context);
-            var resultado = await controller.CreateResena(solicitud);
+            var expectedResenaDetailDTO = new ResenaDetailDTO(2, DateTime.Now,
+                _userName, _nombre, _apellidos, _direccion, _telefono,
+                _tituloResena, new List<ResenaItemDTO>()
+                { new ResenaItemDTO(2, _libro2Titulo, _tipoLibro, _editorial, 4, "Una aventura preciosa para leer en familia.") });
 
-            var created = Assert.IsType<CreatedAtActionResult>(resultado);
-            Assert.Equal(
-                nameof(ResenasController.GetDetailsForResenas),
-                created.ActionName);
+            // Act
+            var result = await controller.CreateResena(resenaDTO);
 
-            var dto = Assert.IsType<ResenaDetailDTO>(created.Value);
+            //Assert
+            //comprobamos que la respuesta es Created y obtenemos la reseña creada
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
+            var actualResenaDetailDTO = Assert.IsType<ResenaDetailDTO>(createdResult.Value);
+
+            //comprobamos que la reseña esperada y la obtenida son iguales
+            Assert.Equal(expectedResenaDetailDTO, actualResenaDetailDTO);
             
-            var dtoEsperado = new ResenaDetailDTO(
-            id: dto.Id,
-            tituloResena: "Reseña: me gusta",
-            nombreCliente: "Ana",
-            apellidosCliente: "Pérez",
-            telefonoCliente: "600123456",
-            fecha: dto.Fecha,
-            items: new List<ResenaItemDTO>
-            {
-        new(
-            libroId: 1,
-            tituloLibro: "Dune",
-            tipoLibro: "Tapa blanda",
-            editorial: "Minotauro",
-            puntuacion: 5,
-            comentario: comentario)
-     });
-
-            Assert.Equal(dtoEsperado, dto);
-
-            var resenaGuardada = await _context.Resenas
-                .Include(r => r.ResenaItems)
-                .SingleAsync();
-
-            Assert.Equal("Reseña: me gusta", resenaGuardada.TituloResena);
-            Assert.Equal("usuario-valido", resenaGuardada.ApplicationUserId);
-            Assert.Single(resenaGuardada.ResenaItems);
-            Assert.Equal(1, resenaGuardada.ResenaItems[0].LibroId);
-            Assert.Equal(5, resenaGuardada.ResenaItems[0].Calificacion);
-        }
-
-        private async Task AssertBadRequestAsync(ResenaForCreateDTO solicitud)
-        {
-            var controller = new ResenasController(_context);
-            var resultado = await controller.CreateResena(solicitud);
-
-            var badRequest = Assert.IsType<BadRequestObjectResult>(resultado);
-            Assert.IsType<ValidationProblemDetails>(badRequest.Value);
-        }
-
-        private static ResenaForCreateDTO CrearSolicitud(
-            string userId = "usuario-valido",
-            string titulo = "Reseña: me gusta",
-            params ResenaItemForCreateDTO[] items)
-        {
-            return new ResenaForCreateDTO
-            {
-                ApplicationUserId = userId,
-                TituloResena = titulo,
-                Items = items.ToList()
-            };
-        }
-
-        private async Task SeedDatosAsync()
-        {
-            var usuarioValido = CrearUsuario(
-                "usuario-valido",
-                "Ana",
-                "Pérez",
-                "Calle Mayor 1",
-                "600123456");
-
-            var usuariosConPerfilIncompleto = new[]
-            {
-                CrearUsuario("sin-nombre", "", "Pérez", "Calle Mayor 1", "600123456"),
-                CrearUsuario("sin-apellidos", "Ana", "", "Calle Mayor 1", "600123456"),
-                CrearUsuario("sin-direccion", "Ana", "Pérez", "", "600123456"),
-                CrearUsuario("sin-telefono", "Ana", "Pérez", "Calle Mayor 1", "")
-            };
-
-            _context.Users.Add(usuarioValido);
-            _context.Users.AddRange(usuariosConPerfilIncompleto);
-
-            var genero = new Genero(1, "Ciencia ficción");
-            var editorial = new Editorial(1, "Minotauro");
-
-            var libro = new Libro(
-                1,
-                "Dune",
-                "Frank Herbert",
-                new DateTime(1965, 1, 1),
-                20m,
-                10m,
-                5,
-                "Tapa blanda",
-                4.5,
-                genero,
-                editorial)
-            {
-                CompraItems = new List<CompraItem>(),
-                ReponeItems = new List<ReposicionItem>(),
-                ResenaItems = new List<ResenaItem>()
-            };
-
-            _context.Generos.Add(genero);
-            _context.Editoriales.Add(editorial);
-            _context.Libros.Add(libro);
-
-            await _context.SaveChangesAsync();
-        }
-
-        private static ApplicationUser CrearUsuario(
-            string id,
-            string nombre,
-            string apellidos,
-            string direccion,
-            string telefono)
-        {
-            return new ApplicationUser(
-                id,
-                nombre,
-                apellidos,
-                $"{id}@example.test",
-                direccion)
-            {
-                PhoneNumber = telefono
-            };
-        }
-
-        public void Dispose()
-        {
-            _context.Dispose();
-            _connection.Dispose();
+            // Comprobamos que la reseña se ha guardado (ya había 1) y que se han actualizado los datos del usuario
+            Assert.Equal(2, _context.Resenas.Count());
+            Assert.Equal(_telefono, _context.ApplicationUsers.First(u => u.UserName == _userName).PhoneNumber);
         }
     }
 }

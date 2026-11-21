@@ -1,139 +1,82 @@
 using AppForSEII.API.Controllers;
-using AppForSEII.API.Data;
 using AppForSEII.API.DTOs;
-using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 
-namespace AppForSEII.UT
+namespace AppForSEII.UT.ResenasController_test
 {
-    public class GetResenas_test : IDisposable
+    public class GetResenas_test : AppForSEII4SqliteUT
     {
-        private readonly SqliteConnection _connection;
-        private readonly ApplicationDbContext _context;
-
-        public GetResenas_test()
+               public GetResenas_test()
         {
-            _connection = new SqliteConnection("Filename=:memory:");
-            _connection.Open();
+            var generos = new List<Genero>() {
+                new Genero(0, "Ciencia ficción"),
+            };
 
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlite(_connection)
-                .Options;
+            var editoriales = new List<Editorial>() {
+                new Editorial(0, "Minotauro"),
+            };
 
-            _context = new ApplicationDbContext(options);
-            _context.Database.EnsureCreated();
+            var libros = new List<Libro>() {
+                new Libro(0, "Dune", "Frank Herbert", new DateTime(1965, 1, 1), 20m, 10m, 5, "Tapa blanda", 4.5, generos[0], editoriales[0]),
+            };
+
+            ApplicationUser user = new ApplicationUser("1", "Ana", "Pérez", "ana@uclm.es", "Calle Mayor 1");
+            user.PhoneNumber = "600123456";
+
+            var resena = new Resena(0, "Reseña: buena obra", new DateTime(2026, 11, 1), user, new List<ResenaItem>());
+            resena.ResenaItems.Add(new ResenaItem(libros[0], resena, 5, "Una novela de ciencia ficción muy recomendable."));
+
+            _context.ApplicationUsers.Add(user);
+            _context.AddRange(generos);
+            _context.AddRange(editoriales);
+            _context.AddRange(libros);
+            _context.Add(resena);
+            _context.SaveChanges();
         }
 
         [Fact]
+        [Trait("LevelTesting", "Unit Testing")]
         public async Task GetResena_NotFound_test()
         {
-            var controller = new ResenasController(_context);
+            // Arrange
+            var mock = new Mock<ILogger<ResenasController>>();
+            ILogger<ResenasController> logger = mock.Object;
 
-            var result = await controller.GetDetailsForResenas(999);
+            var controller = new ResenasController(_context, logger);
 
-            Assert.IsType<NotFoundObjectResult>(result.Result);
+            // Act
+            var result = await controller.GetDetailsForResenas(0);
+
+            //Assert
+            //comprobamos que la respuesta es NotFound
+            Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
+        [Trait("LevelTesting", "Unit Testing")]
         public async Task GetResena_Found_test()
         {
-            var cliente = new ApplicationUser(
-                "cliente-test",
-                "Ana",
-                "Pérez",
-                "ana@example.test",
-                "Calle Mayor 1")
-            {
-                PhoneNumber = "600123456"
-            };
+            // Arrange
+            var mock = new Mock<ILogger<ResenasController>>();
+            ILogger<ResenasController> logger = mock.Object;
 
-            var genero = new Genero(1, "Ciencia ficción");
-            var editorial = new Editorial(1, "Minotauro");
+            var controller = new ResenasController(_context, logger);
 
-            var libro = new Libro(
-                1,
-                "Dune",
-                "Frank Herbert",
-                new DateTime(1965, 1, 1),
-                20m,
-                10m,
-                5,
-                "Tapa blanda",
-                4.5,
-                genero,
-                editorial)
-            {
-                CompraItems = new List<CompraItem>(),
-                ReponeItems = new List<ReposicionItem>(),
-                ResenaItems = new List<ResenaItem>()
-            };
+            var expectedResena = new ResenaDetailDTO(1, new DateTime(2026, 11, 1),
+                "ana@uclm.es", "Ana", "Pérez", "Calle Mayor 1", "600123456",
+                "Reseña: buena obra", new List<ResenaItemDTO>());
+            expectedResena.ResenaItems.Add(new ResenaItemDTO(1, "Dune", "Tapa blanda", "Minotauro", 5,
+                "Una novela de ciencia ficción muy recomendable."));
 
-            const string descripcion =
-                "Una novela de ciencia ficción muy recomendable.";
+            // Act
+            var result = await controller.GetDetailsForResenas(1);
 
-            var resena = new Resena(
-                1,
-                new DateTime(2026, 11, 1),
-                cliente.Id)
-            {
-                TituloResena = "Una buena obra",
-                ApplicationUser = cliente
-            };
+            //Assert
+            //comprobamos que la respuesta es OK y obtenemos la reseña
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var resenaDTOActual = Assert.IsType<ResenaDetailDTO>(okResult.Value);
 
-            var item = new ResenaItem(
-                libro.Id,
-                resena.Id,
-                descripcion,
-                5)
-            {
-                Libro = libro,
-                Resena = resena
-            };
-
-            resena.ResenaItems.Add(item);
-            libro.ResenaItems.Add(item);
-
-            _context.Generos.Add(genero);
-            _context.Editoriales.Add(editorial);
-            _context.Libros.Add(libro);
-            _context.Users.Add(cliente);
-            _context.Resenas.Add(resena);
-
-            await _context.SaveChangesAsync();
-
-            var controller = new ResenasController(_context);
-            var result = await controller.GetDetailsForResenas(resena.Id);
-
-            var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var dto = Assert.IsType<ResenaDetailDTO>(okResult.Value);
-
-            var dtoEsperado = new ResenaDetailDTO(
-             id: resena.Id,
-            tituloResena: "Una buena obra",
-            nombreCliente: "Ana",
-            apellidosCliente: "Pérez",
-            telefonoCliente: "600123456",
-            fecha: new DateTime(2026, 11, 1),
-            items: new List<ResenaItemDTO>
-            {
-        new(
-            libroId: libro.Id,
-            tituloLibro: "Dune",
-            tipoLibro: "Tapa blanda",
-            editorial: "Minotauro",
-            puntuacion: 5,
-            comentario: descripcion)
-     });
-
-            Assert.Equal(dtoEsperado, dto);
-        }
-
-        public void Dispose()
-        {
-            _context.Dispose();
-            _connection.Dispose();
+            //comprobamos que la reseña esperada y la obtenida son iguales
+            Assert.Equal(expectedResena, resenaDTOActual);
         }
     }
 }

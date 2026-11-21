@@ -271,26 +271,25 @@ namespace AppForSEII.API.Data {
                 var nombreViento = dbContext.Libros.First(l => l.Titulo == "El nombre del viento");
                 var juegoTronos = dbContext.Libros.First(l => l.Titulo == "Juego de tronos");
 
-                // 1. Reseñas (título de 10 a 20 caracteres)
-                var resena1 = new Resena(0, DateTime.Now.AddDays(-12), cliente.Id) { TituloResena = "Grandes clásicos" };
-                var resena2 = new Resena(0, DateTime.Now.AddDays(-9), cliente.Id) { TituloResena = "Lecturas de verano" };
-                var resena3 = new Resena(0, DateTime.Now.AddDays(-6), cliente.Id) { TituloResena = "Ciencia ficción top" };
-                var resena4 = new Resena(0, DateTime.Now.AddDays(-2), cliente.Id) { TituloResena = "Fantasía épica pura" };
+                
+                // Reseñas (título de 10 a 20 caracteres) con sus libros (descripción opcional de 20 a 100, calificación de 1 a 5)
+                var resena1 = new Resena(0, "Grandes clásicos", DateTime.Now.AddDays(-12), cliente, new List<ResenaItem>());
+                resena1.ResenaItems.Add(new ResenaItem(anillos, resena1, 5, "Una obra maestra que todo el mundo debe leer."));
+                resena1.ResenaItems.Add(new ResenaItem(dune, resena1, 4, "Muy buen libro de ciencia ficción, me encantó."));
+
+                var resena2 = new Resena(0, "Lecturas de verano", DateTime.Now.AddDays(-9), cliente, new List<ResenaItem>());
+                resena2.ResenaItems.Add(new ResenaItem(harryPotter, resena2, 5, "Mágico de principio a fin, ideal para todas las edades."));
+                resena2.ResenaItems.Add(new ResenaItem(orientExpress, resena2, 4));
+
+                var resena3 = new Resena(0, "Ciencia ficción top", DateTime.Now.AddDays(-6), cliente, new List<ResenaItem>());
+                resena3.ResenaItems.Add(new ResenaItem(fundacion, resena3, 4, "Una saga fundamental para entender la ciencia ficción."));
+                resena3.ResenaItems.Add(new ResenaItem(orwell, resena3, 5, "Inquietante y más actual que nunca, muy recomendable."));
+
+                var resena4 = new Resena(0, "Fantasía épica pura", DateTime.Now.AddDays(-2), cliente, new List<ResenaItem>());
+                resena4.ResenaItems.Add(new ResenaItem(nombreViento, resena4, 5, "La mejor narrativa fantástica que he leído en años."));
+                resena4.ResenaItems.Add(new ResenaItem(juegoTronos, resena4, 4));
 
                 dbContext.AddRange(resena1, resena2, resena3, resena4);
-                dbContext.SaveChanges();
-
-                // 2. Libros reseñados (descripción opcional de 20 a 100 caracteres, calificación de 1 a 5)
-                dbContext.AddRange(
-                    new ResenaItem(anillos.Id, resena1.Id, "Una obra maestra que todo el mundo debe leer.", 5),
-                    new ResenaItem(dune.Id, resena1.Id, "Muy buen libro de ciencia ficción, me encantó.", 4),
-                    new ResenaItem(harryPotter.Id, resena2.Id, "Mágico de principio a fin, ideal para todas las edades.", 5),
-                    new ResenaItem(orientExpress.Id, resena2.Id, null, 4),
-                    new ResenaItem(fundacion.Id, resena3.Id, "Una saga fundamental para entender la ciencia ficción.", 4),
-                    new ResenaItem(orwell.Id, resena3.Id, "Inquietante y más actual que nunca, muy recomendable.", 5),
-                    new ResenaItem(nombreViento.Id, resena4.Id, "La mejor narrativa fantástica que he leído en años.", 5),
-                    new ResenaItem(juegoTronos.Id, resena4.Id, null, 4)
-                );
                 dbContext.SaveChanges();
             }
         }

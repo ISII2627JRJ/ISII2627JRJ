@@ -1,164 +1,113 @@
 using AppForSEII.API.Controllers;
-using AppForSEII.API.Data;
 using AppForSEII.API.DTOs;
-using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 
-namespace AppForSEII.UT
+namespace AppForSEII.UT.LibroController_test
 {
-    public class GetLibrosParaResenar_test : IDisposable
+    public class GetLibrosParaResenar_test : AppForSEII4SqliteUT
     {
-        private readonly SqliteConnection _connection;
-        private readonly ApplicationDbContext _context;
-
+        // Constructor: mete en la BD de pruebas los datos que necesitamos
         public GetLibrosParaResenar_test()
         {
-            _connection = new SqliteConnection("Filename=:memory:");
-            _connection.Open();
-
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlite(_connection)
-                .Options;
-
-            _context = new ApplicationDbContext(options);
-            _context.Database.EnsureCreated();
-        }
-
-        [Fact]
-        public async Task GetLibrosParaResenar_OK_test()
-        {
-            await SeedLibrosAsync();
-
-            var controller = new LibroController(
-                _context,
-                Mock.Of<ILogger<LibroController>>());
-
-            var resultadoSinFiltros =
-                await controller.GetLibrosParaResenar(null, null);
-
-            var okSinFiltros =
-                Assert.IsType<OkObjectResult>(resultadoSinFiltros);
-
-            var todosLosLibros =
-                Assert.IsType<List<LibroParaResenarDTO>>(okSinFiltros.Value);
-
-            var librosEsperados = new List<LibroParaResenarDTO>
+            var generos = new List<Genero>()
             {
-             new(1, "Dune", "Tapa blanda", "Ciencia ficción",
-             "Minotauro", "Frank Herbert", 4.5, new DateTime(1965, 8, 1)),
-
-             new(3, "El Hobbit", "Tapa blanda", "Fantasía",
-             "Minotauro", "J. R. R. Tolkien", 4.7, new DateTime(1937, 9, 21)),
-
-             new(2, "Fundación", "Tapa dura premium", "Ciencia ficción",
-              "Nova", "Isaac Asimov", 4.6, new DateTime(1951, 1, 1))
+                new Genero(0, "Ciencia ficción"),
+                new Genero(0, "Fantasía")
+            };
+            var editoriales = new List<Editorial>()
+            {
+                new Editorial(0, "Minotauro"),
+                new Editorial(0, "Nova")
+            };
+            var libros = new List<Libro>()
+            {
+                new Libro(0, "Dune", "Frank Herbert", new DateTime(1965, 8, 1), 20m, 10m, 5, "Tapa blanda", 4.5, generos[0], editoriales[0]),
+                new Libro(0, "Fundación", "Isaac Asimov", new DateTime(1951, 1, 1), 18m, 9m, 2, "Tapa dura premium", 4.6, generos[0], editoriales[1]),
+                // Este libro tiene stock 0, pero para reseñar se muestran todos los libros del sistema
+                new Libro(0, "El Hobbit", "J. R. R. Tolkien", new DateTime(1937, 9, 21), 15m, 7m, 0, "Tapa blanda", 4.7, generos[1], editoriales[0])
             };
 
-            Assert.Equal(librosEsperados, todosLosLibros);
+            _context.AddRange(generos);
+            _context.AddRange(editoriales);
+            _context.AddRange(libros);
+            _context.SaveChanges();
+        }
 
-            var resultadoFiltrado =
-                await controller.GetLibrosParaResenar(
-                    "Ciencia ficción",
-                    "Tapa blanda");
+        // Casos de prueba: (genero, tipoLibro, libros que esperamos)
+        public static IEnumerable<object?[]> TestCasesFor_GetLibrosParaResenar_OK()
+        {
+            var dune = new LibroParaResenarDTO(1, "Dune", "Tapa blanda", "Ciencia ficción", "Minotauro", "Frank Herbert", 4.5, new DateTime(1965, 8, 1));
+            var fundacion = new LibroParaResenarDTO(2, "Fundación", "Tapa dura premium", "Ciencia ficción", "Nova", "Isaac Asimov", 4.6, new DateTime(1951, 1, 1));
+            var hobbit = new LibroParaResenarDTO(3, "El Hobbit", "Tapa blanda", "Fantasía", "Minotauro", "J. R. R. Tolkien", 4.7, new DateTime(1937, 9, 21));
 
-            var okFiltrado =
-                Assert.IsType<OkObjectResult>(resultadoFiltrado);
+            var allTests = new List<object?[]>
+            {
+                // Sin filtros: todos los libros, ordenados por título
+                new object?[] { null, null, new List<LibroParaResenarDTO>() { dune, hobbit, fundacion } },
+                // Filtro por género
+                new object?[] { "Ciencia ficción", null, new List<LibroParaResenarDTO>() { dune, fundacion } },
+                // Filtro por tipo de libro
+                new object?[] { null, "Tapa blanda", new List<LibroParaResenarDTO>() { dune, hobbit } },
+                // Filtro por género y tipo de libro a la vez
+                new object?[] { "Ciencia ficción", "Tapa blanda", new List<LibroParaResenarDTO>() { dune } },
+                // Combinación que no cumple ningún libro: no debe devolver nada
+                new object?[] { "Fantasía", "Tapa dura premium", new List<LibroParaResenarDTO>() }
+            };
+            return allTests;
+        }
 
-            var librosFiltrados =
-                Assert.IsType<List<LibroParaResenarDTO>>(okFiltrado.Value);
+        [Theory]
+        [Trait("LevelTesting", "Unit Testing")]
+        [MemberData(nameof(TestCasesFor_GetLibrosParaResenar_OK))]
+        public async Task GetLibrosParaResenar_OK_test(string? genero, string? tipoLibro, List<LibroParaResenarDTO> expectedLibros)
+        {
+            // Arrange
+            var mock = new Mock<ILogger<LibroController>>();
+            ILogger<LibroController> logger = mock.Object;
+            var controller = new LibroController(_context, logger);
 
-            Assert.Equal(
-            new List<LibroParaResenarDTO> { librosEsperados[0] },
-            librosFiltrados);
+            // Act
+            var result = await controller.GetLibrosParaResenar(genero, tipoLibro);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var librosActual = Assert.IsType<List<LibroParaResenarDTO>>(okResult.Value);
+            Assert.Equal(expectedLibros, librosActual);
         }
 
         [Fact]
-        public async Task GetLibrosParaResenar_badrequest_test()
+        [Trait("LevelTesting", "Unit Testing")]
+        public async Task GetLibrosParaResenar_badrequest_genero_test()
         {
-            var controller = new LibroController(
-                _context,
-                Mock.Of<ILogger<LibroController>>());
+            // Arrange
+            var mock = new Mock<ILogger<LibroController>>();
+            ILogger<LibroController> logger = mock.Object;
+            var controller = new LibroController(_context, logger);
 
-            var generoVacio =
-                await controller.GetLibrosParaResenar(" ", null);
+            // Act: filtro de género vacío -> error
+            var result = await controller.GetLibrosParaResenar(" ", null);
 
-            var errorGenero =
-                Assert.IsType<BadRequestObjectResult>(generoVacio);
-
-            Assert.IsType<ValidationProblemDetails>(errorGenero.Value);
-
-            var tipoLibroVacio =
-                await controller.GetLibrosParaResenar(null, " ");
-
-            var errorTipoLibro =
-                Assert.IsType<BadRequestObjectResult>(tipoLibroVacio);
-
-            Assert.IsType<ValidationProblemDetails>(errorTipoLibro.Value);
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
+            Assert.Equal("El parámetro de género no puede estar vacío.", problemDetails.Errors.First().Value[0]);
         }
 
-        private async Task SeedLibrosAsync()
+        [Fact]
+        [Trait("LevelTesting", "Unit Testing")]
+        public async Task GetLibrosParaResenar_badrequest_tipoLibro_test()
         {
-            var cienciaFiccion = new Genero(1, "Ciencia ficción");
-            var fantasia = new Genero(2, "Fantasía");
+            // Arrange
+            var mock = new Mock<ILogger<LibroController>>();
+            ILogger<LibroController> logger = mock.Object;
+            var controller = new LibroController(_context, logger);
 
-            var minotauro = new Editorial(1, "Minotauro");
-            var nova = new Editorial(2, "Nova");
+            // Act: filtro de tipo de libro vacío -> error
+            var result = await controller.GetLibrosParaResenar(null, " ");
 
-            _context.Generos.AddRange(cienciaFiccion, fantasia);
-            _context.Editoriales.AddRange(minotauro, nova);
-
-            _context.Libros.AddRange(
-                new Libro(
-                    1,
-                    "Dune",
-                    "Frank Herbert",
-                    new DateTime(1965, 8, 1),
-                    20m,
-                    10m,
-                    5,
-                    "Tapa blanda",
-                    4.5,
-                    cienciaFiccion,
-                    minotauro),
-
-                new Libro(
-                    2,
-                    "Fundación",
-                    "Isaac Asimov",
-                    new DateTime(1951, 1, 1),
-                    18m,
-                    9m,
-                    2,
-                    "Tapa dura premium",
-                    4.6,
-                    cienciaFiccion,
-                    nova),
-
-                new Libro(
-                    3,
-                    "El Hobbit",
-                    "J. R. R. Tolkien",
-                    new DateTime(1937, 9, 21),
-                    15m,
-                    7m,
-                    0,
-                    "Tapa blanda",
-                    4.7,
-                    fantasia,
-                    minotauro)
-            );
-
-            await _context.SaveChangesAsync();
-        }
-
-        public void Dispose()
-        {
-            _context.Dispose();
-            _connection.Dispose();
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
+            Assert.Equal("El parámetro de tipo de libro no puede estar vacío.", problemDetails.Errors.First().Value[0]);
         }
     }
 }
