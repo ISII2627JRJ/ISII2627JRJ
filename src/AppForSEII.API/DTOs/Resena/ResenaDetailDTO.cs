@@ -1,59 +1,37 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace AppForSEII.API.DTOs
 {
-    public class ResenaDetailDTO
+    //el detalle tiene los mismos datos que el formulario más el Id y la fecha (como RentalDetailDTO)
+    public class ResenaDetailDTO : ResenaForCreateDTO
     {
-        public int Id { get; set; }
-        public string TituloResena { get; set; } = string.Empty;
-        public string NombreCliente { get; set; } = string.Empty;
-        public string ApellidosCliente { get; set; } = string.Empty;
-        public string TelefonoCliente { get; set; } = string.Empty;
-        public DateTime Fecha { get; set; }
-        public IList<ResenaItemDTO> Items { get; set; }
-            = new List<ResenaItemDTO>();
-
-        public ResenaDetailDTO(
-            int id,
-            string tituloResena,
-            string nombreCliente,
-            string apellidosCliente,
-            string telefonoCliente,
-            DateTime fecha,
-            IList<ResenaItemDTO> items)
+        public ResenaDetailDTO(int id, DateTime fecha, string userName, string nombre, string apellidos,
+            string direccion, string telefono, string tituloResena, IList<ResenaItemDTO> resenaItems)
+            : base(userName, nombre, apellidos, direccion, telefono, tituloResena, resenaItems)
         {
             Id = id;
-            TituloResena = tituloResena;
-            NombreCliente = nombreCliente;
-            ApellidosCliente = apellidosCliente;
-            TelefonoCliente = telefonoCliente;
             Fecha = fecha;
-            Items = items;
+        }
+
+        public int Id { get; set; }
+
+        public DateTime Fecha { get; set; }
+
+        //la fecha se genera con DateTime.Now, así que se comparan con un margen de un minuto
+        protected bool CompareDate(DateTime date1, DateTime date2)
+        {
+            return Math.Abs((date1 - date2).TotalMinutes) < 1;
         }
 
         public override bool Equals(object? obj)
         {
-            return obj is ResenaDetailDTO other &&
-                   Id == other.Id &&
-                   TituloResena == other.TituloResena &&
-                   NombreCliente == other.NombreCliente &&
-                   ApellidosCliente == other.ApellidosCliente &&
-                   TelefonoCliente == other.TelefonoCliente &&
-                   Fecha == other.Fecha &&
-                   Items.SequenceEqual(other.Items);
+            return obj is ResenaDetailDTO dTO &&
+                   base.Equals(obj) &&
+                   Id == dTO.Id &&
+                   CompareDate(Fecha, dTO.Fecha);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(
-                Id,
-                TituloResena,
-                NombreCliente,
-                ApellidosCliente,
-                TelefonoCliente,
-                Fecha);
+            return HashCode.Combine(base.GetHashCode(), Id, Fecha);
         }
     }
 }

@@ -64,6 +64,25 @@ namespace AppForSEII.API.Models
         public IList<CompraItem> CompraItems { get; set; }
         public IList<ReposicionItem> ReponeItems { get; set; } 
         public IList<ResenaItem> ResenaItems { get; set; }
+
+                public override bool Equals(object? obj)
+        {
+            return obj is Libro libro &&
+                   Id == libro.Id &&
+                   Titulo == libro.Titulo &&
+                   Autor == libro.Autor &&
+                   FechaLanzamiento == libro.FechaLanzamiento &&
+                   PrecioCompra == libro.PrecioCompra &&
+                   PrecioReposicion == libro.PrecioReposicion &&
+                   Stock == libro.Stock &&
+                   TipoLibro == libro.TipoLibro &&
+                   CalificacionMedia == libro.CalificacionMedia;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, Titulo, Autor, FechaLanzamiento, PrecioCompra, Stock, TipoLibro, CalificacionMedia);
+        }
         
     }
 }
