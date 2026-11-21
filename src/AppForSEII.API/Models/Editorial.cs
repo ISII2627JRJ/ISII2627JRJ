@@ -23,5 +23,17 @@ namespace AppForSEII.API.Models
             Nombre = nombre;
             Libros = new List<Libro>();
         }
+
+                public override bool Equals(object? obj)
+        {
+            return obj is Editorial editorial &&
+                   Id == editorial.Id &&
+                   Nombre == editorial.Nombre;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, Nombre);
+        }
     }
 }

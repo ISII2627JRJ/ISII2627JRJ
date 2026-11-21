@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using AppForSEII.API.Data;
 using AppForSEII.API.DTOs;
-using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace AppForSEII.API.Controllers
 {
@@ -11,259 +8,138 @@ namespace AppForSEII.API.Controllers
     public class ResenasController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<ResenasController> _logger;
 
-        public ResenasController(ApplicationDbContext context)
+        public ResenasController(ApplicationDbContext context, ILogger<ResenasController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
-        [Route("GetDetailsForResenas/{id}")]
+        [Route("[action]")]
         [ProducesResponseType(typeof(ResenaDetailDTO), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult<ResenaDetailDTO>> GetDetailsForResenas(int id)
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult> GetDetailsForResenas(int id)
         {
-
             var resena = await _context.Resenas
-    .Include(r => r.ApplicationUser)
-    .Include(r => r.ResenaItems)
-        .ThenInclude(i => i.Libro)
-            .ThenInclude(l => l!.Editorial)
-    .FirstOrDefaultAsync(r => r.Id == id);
+                .Where(r => r.Id == id)
+                .Include(r => r.ApplicationUser)                //join tabla ApplicationUser
+                .Include(r => r.ResenaItems)                    //join tabla ResenaItems
+                    .ThenInclude(ri => ri.Libro)                //then join tabla Libros
+                        .ThenInclude(l => l.Editorial)          //then join tabla Editoriales
+                .Select(r => new ResenaDetailDTO(r.Id, r.Fecha,
+                    r.ApplicationUser.UserName!, r.ApplicationUser.Name!, r.ApplicationUser.Surname!,
+                    r.ApplicationUser.Direccion!, r.ApplicationUser.PhoneNumber!,
+                    r.TituloResena,
+                    r.ResenaItems
+                        .Select(ri => new ResenaItemDTO(ri.Libro.Id,
+                            ri.Libro.Titulo, ri.Libro.TipoLibro, ri.Libro.Editorial.Nombre,
+                            ri.Calificacion, ri.Descripcion)).ToList()))
+                .FirstOrDefaultAsync();
 
             if (resena == null)
             {
-                return NotFound($"No se encontró la reseña con el ID {id}.");
+                _logger.LogError($"Error: la reseña con id {id} no existe");
+                return NotFound();
             }
 
-            var usuario = resena.ApplicationUser!;
-
-            var resenaDetailDTO = new ResenaDetailDTO(
-            id: resena.Id,
-            tituloResena: resena.TituloResena,
-            nombreCliente: usuario.Name,
-            apellidosCliente: usuario.Surname,
-            telefonoCliente: usuario.PhoneNumber,
-            fecha: resena.Fecha,
-            items: resena.ResenaItems.Select(i => new ResenaItemDTO(
-            libroId: i.LibroId,
-            tituloLibro: i.Libro!.Titulo,
-            tipoLibro: i.Libro.TipoLibro,
-            editorial: i.Libro.Editorial.Nombre,
-            puntuacion: i.Calificacion,
-            comentario: i.Descripcion
-            )).ToList()
-            );
-
-            return Ok(resenaDetailDTO);
+            return Ok(resena);
         }
 
 
         [HttpPost]
-        [Route("CreateResena")]
+        [Route("[action]")]
         [ProducesResponseType(typeof(ResenaDetailDTO), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ProblemDetails), (int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult> CreateResena(
-    [FromBody] ResenaForCreateDTO resenaDTO)
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.Conflict)]
+        public async Task<ActionResult> CreateResena(ResenaForCreateDTO resenaForCreate)
         {
-            if (resenaDTO == null)
-            {
-                return BadRequest();
-            }
+            //las validaciones definidas en ResenaForCreateDTO y ResenaItemDTO (campos obligatorios, título 10-20,
+            //calificación 1-5, descripción 20-100) se comprueban antes de ejecutar el método, así que no se repiten aquí
 
-            var items = resenaDTO.Items
-                ?? new List<ResenaItemForCreateDTO>();
+            if (resenaForCreate.ResenaItems == null || resenaForCreate.ResenaItems.Count == 0)
+                ModelState.AddModelError("ResenaItems", "Error! Debes incluir al menos un libro para reseñar");
 
-            if (string.IsNullOrWhiteSpace(resenaDTO.ApplicationUserId))
-            {
-                ModelState.AddModelError(
-                    "ApplicationUserId",
-                    "El identificador del usuario es obligatorio.");
-            }
+            //examen Sprint 2: el título de la reseña debe empezar por "Reseña:"
+            if (!resenaForCreate.TituloResena.StartsWith("Reseña:"))
+                ModelState.AddModelError("TituloResena", "Error! El título de la reseña debe empezar por 'Reseña:'");
 
-            if (string.IsNullOrWhiteSpace(resenaDTO.TituloResena) ||
-                resenaDTO.TituloResena.Length < 10 ||
-                resenaDTO.TituloResena.Length > 20)
-            {
-                ModelState.AddModelError(
-                    "TituloResena",
-                    "El título debe tener entre 10 y 20 caracteres.");
-            }
+            var user = _context.ApplicationUsers.FirstOrDefault(au => au.UserName == resenaForCreate.UserName);
+            if (user == null)
+                ModelState.AddModelError("ResenaApplicationUser", "Error! El usuario no está registrado");
 
-            if (!resenaDTO.TituloResena.StartsWith("Reseña:"))
-            {
-                ModelState.AddModelError(
-                    "TituloResena",
-                    "El título debe empezar por Reseña.");
-            }
+            if (resenaForCreate.ResenaItems != null &&
+                resenaForCreate.ResenaItems.Select(ri => ri.LibroId).Distinct().Count() != resenaForCreate.ResenaItems.Count)
+                ModelState.AddModelError("ResenaItems", "Error! No puedes reseñar el mismo libro más de una vez");
+
+            if (ModelState.ErrorCount > 0)
+                return BadRequest(new ValidationProblemDetails(ModelState));
 
 
-            if (items.Count == 0)
+            var librosIds = resenaForCreate.ResenaItems.Select(ri => ri.LibroId).ToList();
+
+            var libros = _context.Libros
+                .Include(l => l.Editorial)
+                .Where(l => librosIds.Contains(l.Id))
+                .ToList();
+
+            //se guardan en el usuario los datos introducidos en el formulario
+            user!.Name = resenaForCreate.Nombre;
+            user.Surname = resenaForCreate.Apellidos;
+            user.Direccion = resenaForCreate.Direccion;
+            user.PhoneNumber = resenaForCreate.Telefono;
+
+            Resena resena = new Resena(0, resenaForCreate.TituloResena, DateTime.Now, user, new List<ResenaItem>());
+
+            foreach (var item in resenaForCreate.ResenaItems)
             {
-                ModelState.AddModelError(
-                    "Items",
-                    "La reseña debe contener al menos un libro.");
-            }
-            else
-            {
-                for (int i = 0; i < items.Count; i++)
+                Libro? libro = libros.FirstOrDefault(l => l.Id == item.LibroId);
+                //si el libro no está en la base de datos
+                if (libro == null)
                 {
-                    var item = items[i];
-
-                    if (item == null)
-                    {
-                        ModelState.AddModelError(
-                            $"Items[{i}]",
-                            "El elemento de reseña no puede estar vacío.");
-                        continue;
-                    }
-
-                    if (item.LibroId <= 0)
-                    {
-                        ModelState.AddModelError(
-                            $"Items[{i}].LibroId",
-                            "El identificador del libro debe ser válido.");
-                    }
-
-                    if (item.Calificacion < 1 || item.Calificacion > 5)
-                    {
-                        ModelState.AddModelError(
-                            $"Items[{i}].Calificacion",
-                            "La calificación debe estar entre 1 y 5.");
-                    }
-
-                    if (item.Descripcion != null &&
-                        (item.Descripcion.Length < 20 ||
-                         item.Descripcion.Length > 100))
-                    {
-                        ModelState.AddModelError(
-                            $"Items[{i}].Descripcion",
-                            "La descripción debe tener entre 20 y 100 caracteres.");
-                    }
+                    ModelState.AddModelError("ResenaItems", $"Error! El libro con id {item.LibroId} no existe");
+                }
+                else if (item.Calificacion < 1 || item.Calificacion > 5)
+                {
+                    ModelState.AddModelError("ResenaItems", $"Error! La calificación de '{libro.Titulo}' debe estar entre 1 y 5");
+                }
+                else
+                {
+                    resena.ResenaItems.Add(new ResenaItem(libro, resena, item.Calificacion, item.Descripcion));
+                    //se completan los datos del libro que se devuelven en el detalle
+                    item.Titulo = libro.Titulo;
+                    item.TipoLibro = libro.TipoLibro;
+                    item.Editorial = libro.Editorial.Nombre;
                 }
             }
 
-            if (!ModelState.IsValid)
+            //si algún libro no existe
+            if (ModelState.ErrorCount > 0)
             {
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            var usuario = await _context.Users.FindAsync(
-                resenaDTO.ApplicationUserId);
-
-            if (usuario == null)
-            {
-                ModelState.AddModelError(
-                    "ApplicationUserId",
-                    "El usuario especificado no existe en el sistema.");
-
-                return BadRequest(new ValidationProblemDetails(ModelState));
-            }
-
-            if (string.IsNullOrWhiteSpace(usuario.Name) ||
-                string.IsNullOrWhiteSpace(usuario.Surname) ||
-                string.IsNullOrWhiteSpace(usuario.Direccion) ||
-                string.IsNullOrWhiteSpace(usuario.PhoneNumber))
-            {
-                ModelState.AddModelError(
-                    "ApplicationUserId",
-                    "El perfil debe tener nombre, apellidos, dirección y teléfono.");
-
-                return BadRequest(new ValidationProblemDetails(ModelState));
-            }
-
-            var idsSolicitados = items
-                .Select(item => item.LibroId)
-                .ToList();
-
-            var idsUnicos = idsSolicitados
-                .Distinct()
-                .ToList();
-
-            if (idsSolicitados.Count != idsUnicos.Count)
-            {
-                ModelState.AddModelError(
-                    "Items",
-                    "No se puede repetir un libro en la reseña.");
-
-                return BadRequest(new ValidationProblemDetails(ModelState));
-            }
-
-            var librosPorId = await _context.Libros
-                .Include(libro => libro.Editorial)
-                .Where(libro => idsUnicos.Contains(libro.Id))
-                .ToDictionaryAsync(libro => libro.Id);
-
-            if (librosPorId.Count != idsUnicos.Count)
-            {
-                ModelState.AddModelError(
-                    "Items",
-                    "Uno o más libros no existen.");
-
-                return BadRequest(new ValidationProblemDetails(ModelState));
-            }
-
-            var resena = new Resena(
-     id: 0,
-     fecha: DateTime.Now,
-     applicationUserId: resenaDTO.ApplicationUserId)
-            {
-                TituloResena = resenaDTO.TituloResena
-            };
-
-            foreach (var itemDTO in items)
-            {
-                resena.ResenaItems.Add(
-                    new ResenaItem(
-                        libroId: itemDTO.LibroId,
-                        resenaId: resena.Id,
-                        descripcion: itemDTO.Descripcion,
-                        calificacion: itemDTO.Calificacion)
-                    {
-                        Resena = resena
-                    });
-            }
-
+            _context.Add(resena);
 
             try
             {
-                _context.Resenas.Add(resena);
+                //se guardan la reseña y sus ResenaItems
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (Exception ex)
             {
-                return Problem(
-                    statusCode: (int)HttpStatusCode.InternalServerError,
-                    title: "No se pudo guardar la reseña.",
-                    detail: "Se produjo un error al guardar la reseña en la base de datos.");
+                _logger.LogError(ex.Message);
+                return Conflict("Error! Se produjo un error al guardar la reseña, inténtalo más tarde");
             }
 
-            var detalle = new ResenaDetailDTO(
-                id: resena.Id,
-                tituloResena: resena.TituloResena,
-                nombreCliente: usuario.Name,
-                apellidosCliente: usuario.Surname,
-                telefonoCliente: usuario.PhoneNumber,
-                fecha: resena.Fecha,
-                items: resena.ResenaItems.Select(item =>
-                {
-                    var libro = librosPorId[item.LibroId];
+            //se devuelve el detalle de la reseña
+            var resenaDetail = new ResenaDetailDTO(resena.Id, resena.Fecha,
+                resenaForCreate.UserName, resenaForCreate.Nombre, resenaForCreate.Apellidos,
+                resenaForCreate.Direccion, resenaForCreate.Telefono,
+                resenaForCreate.TituloResena, resenaForCreate.ResenaItems);
 
-                    return new ResenaItemDTO(
-                        libroId: item.LibroId,
-                        tituloLibro: libro.Titulo,
-                        tipoLibro: libro.TipoLibro,
-                        editorial: libro.Editorial.Nombre,
-                        puntuacion: item.Calificacion,
-                        comentario: item.Descripcion);
-                }).ToList()
-            );
-
-            return CreatedAtAction(
-                nameof(GetDetailsForResenas),
-                new { id = resena.Id },
-                detalle);
+            return CreatedAtAction("GetDetailsForResenas", new { id = resena.Id }, resenaDetail);
         }
     }
 }
