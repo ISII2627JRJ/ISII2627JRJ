@@ -110,12 +110,12 @@ namespace AppForSEII.Web.API
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int id);
+        System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int? id);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int id, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int? id, System.Threading.CancellationToken cancellationToken);
 
         /// <returns>Created</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -1022,7 +1022,7 @@ namespace AppForSEII.Web.API
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int id)
+        public virtual System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int? id)
         {
             return GetDetailsForResenasAsync(id, System.Threading.CancellationToken.None);
         }
@@ -1030,11 +1030,8 @@ namespace AppForSEII.Web.API
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int id, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ResenaDetailDTO> GetDetailsForResenasAsync(int? id, System.Threading.CancellationToken cancellationToken)
         {
-            if (id == null)
-                throw new System.ArgumentNullException("id");
-
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -1046,9 +1043,14 @@ namespace AppForSEII.Web.API
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/Resenas/GetDetailsForResenas/{id}"
-                    urlBuilder_.Append("api/Resenas/GetDetailsForResenas/");
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+                    // Operation Path: "api/Resenas/GetDetailsForResenas"
+                    urlBuilder_.Append("api/Resenas/GetDetailsForResenas");
+                    urlBuilder_.Append('?');
+                    if (id != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("id")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -1085,12 +1087,12 @@ namespace AppForSEII.Web.API
                         else
                         if (status_ == 404)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<string>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
                             }
-                            throw new ApiException<string>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                            throw new ApiException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
                         {
@@ -1185,14 +1187,14 @@ namespace AppForSEII.Web.API
                             throw new ApiException<ValidationProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
-                        if (status_ == 500)
+                        if (status_ == 409)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<string>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
                             }
-                            throw new ApiException<ProblemDetails>("Internal Server Error", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                            throw new ApiException<string>("Conflict", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
                         {
@@ -1684,26 +1686,39 @@ namespace AppForSEII.Web.API
     public partial class ResenaDetailDTO
     {
 
+        [Newtonsoft.Json.JsonProperty("userName", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string UserName { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("nombre", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Nombre { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("apellidos", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Apellidos { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("direccion", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Direccion { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("telefono", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Telefono { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("tituloResena", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(20, MinimumLength = 10)]
+        public string TituloResena { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("resenaItems", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<ResenaItemDTO> ResenaItems { get; set; }
+
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Id { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("tituloResena", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string TituloResena { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("nombreCliente", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string NombreCliente { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("apellidosCliente", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string ApellidosCliente { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("telefonoCliente", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string TelefonoCliente { get; set; }
-
         [Newtonsoft.Json.JsonProperty("fecha", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset Fecha { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("items", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.ICollection<ResenaItemDTO> Items { get; set; }
 
     }
 
@@ -1711,18 +1726,33 @@ namespace AppForSEII.Web.API
     public partial class ResenaForCreateDTO
     {
 
-        [Newtonsoft.Json.JsonProperty("applicationUserId", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("userName", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public string ApplicationUserId { get; set; }
+        public string UserName { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("nombre", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Nombre { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("apellidos", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Apellidos { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("direccion", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Direccion { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("telefono", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Telefono { get; set; }
 
         [Newtonsoft.Json.JsonProperty("tituloResena", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.StringLength(20, MinimumLength = 10)]
         public string TituloResena { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("items", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<ResenaItemForCreateDTO> Items { get; set; } = new System.Collections.ObjectModel.Collection<ResenaItemForCreateDTO>();
+        [Newtonsoft.Json.JsonProperty("resenaItems", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<ResenaItemDTO> ResenaItems { get; set; }
 
     }
 
@@ -1733,29 +1763,14 @@ namespace AppForSEII.Web.API
         [Newtonsoft.Json.JsonProperty("libroId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int LibroId { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("tituloLibro", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string TituloLibro { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("puntuacion", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public int Puntuacion { get; set; }
+        [Newtonsoft.Json.JsonProperty("titulo", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Titulo { get; set; }
 
         [Newtonsoft.Json.JsonProperty("tipoLibro", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string TipoLibro { get; set; }
 
         [Newtonsoft.Json.JsonProperty("editorial", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Editorial { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("comentario", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Comentario { get; set; }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.8.0.0 (NJsonSchema v11.6.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ResenaItemForCreateDTO
-    {
-
-        [Newtonsoft.Json.JsonProperty("libroId", Required = Newtonsoft.Json.Required.Always)]
-        public int LibroId { get; set; }
 
         [Newtonsoft.Json.JsonProperty("calificacion", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Range(1, 5)]
