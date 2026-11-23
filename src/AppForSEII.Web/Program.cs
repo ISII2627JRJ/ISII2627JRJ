@@ -79,9 +79,11 @@ string? URI2API = builder.Configuration.GetValue(typeof(string), "AppForSEIIAPIC
 //the environment variable URI2API is defined in appsettings.json
 builder.Services.AddScoped<IAppForSEIIAPIClient>(sp => new AppForSEIIAPIClient(URI2API, new HttpClient()));
 
-//servicio en memoria para guardar el estado de la reseña entre las distintas páginas
-//https://learn.microsoft.com/es-es/aspnet/core/blazor/state-management
+
 builder.Services.AddScoped<ResenaStateContainer>();
+
+builder.Services.AddScoped<ReposicionStateContainer>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
