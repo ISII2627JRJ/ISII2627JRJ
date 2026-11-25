@@ -1,0 +1,112 @@
+@page "/resenas/detalleresena"
+
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@inject IAppForSEIIAPIClient apiclient
+@inject ILogger<DetailResena> logger
+
+@attribute [Authorize]
+
+<h3>Detalle de la reseña</h3>
+
+@if (resena == null)
+{
+    <div class="alert alert-danger" role="alert">
+        <p id="ErrorsShown">@error</p>
+    </div>
+}
+else
+{
+    <!-- Datos de la reseña escrita -->
+    <table class="table table-borderless table-sm" id="DatosResena">
+        <tr>
+            <th>Título de la reseña</th>
+            <td id="TituloResena">@resena.TituloResena</td>
+        </tr>
+        <tr>
+            <th>Nombre y apellidos</th>
+            <td id="NombreApellidos">@resena.Nombre @resena.Apellidos</td>
+        </tr>
+        <tr>
+            <th>Teléfono</th>
+            <td id="Telefono">@resena.Telefono</td>
+        </tr>
+        <tr>
+            <th>Fecha de la reseña</th>
+            <td id="FechaResena">@resena.Fecha.DateTime.ToString("dd/MM/yyyy HH:mm")</td>
+        </tr>
+    </table>
+
+    <!-- Libros reseñados -->
+    <h4>Libros reseñados</h4>
+
+    <table class="table" id="LibrosResenados">
+        <thead>
+            <tr>
+                <th scope="col">Título</th>
+                <th scope="col">Editorial</th>
+                <th scope="col">Tipo de libro</th>
+                <th scope="col">Calificación</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (ResenaItemDTO item in resena.ResenaItems)
+            {
+                <tr id="ResenaItem_@item.Titulo">
+                    <td>@item.Titulo</td>
+                    <td>@item.Editorial</td>
+                    <td>@item.TipoLibro</td>
+                    <td>@item.Calificacion / 5</td>
+                    <td>@item.Descripcion</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    //id de la reseña que se quiere ver, se pasa en la URL: /resenas/detalleresena?ResenaID=1
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int ResenaID { get; set; }
+
+    private ResenaDetailDTO? resena;
+    private string error = "";
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //obtenemos el nombre del usuario conectado
+        string userName = "";
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var user = authState?.User;
+
+            if (user is not null && user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                userName = user.Identity.Name ?? "";
+            }
+        }
+
+        try
+        {
+            resena = await apiclient.GetDetailsForResenasAsync(ResenaID);
+        }
+        catch (ApiException ex)
+        {
+            logger.LogError($"{DateTime.Now} Error: {ex.Message}");
+            resena = null;
+        }
+
+        //solo se muestra la reseña si existe y es del usuario conectado
+        if (resena == null || resena.UserName != userName)
+        {
+            resena = null;
+            error = $"Error! No tienes permiso para ver esta reseña o no existe una reseña con id={ResenaID}";
+        }
+    }
+}
